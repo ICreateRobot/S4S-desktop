@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'"> -->
+    <style>
+      body {
+        margin: 0;
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        background-color: white;
+        }
+
+        .tab-bar {
+            display: flex;
+            padding-left: 20px;
+            border-bottom: 2px solid #00bfa5;
+            margin-bottom: 2px;
+        }
+
+            .tab {
+            padding: 10px 25px 10px 20px;
+            margin-right: 0px;
+            background-color: white;
+            color: #00bfa5;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid #00bfa5;
+            border-bottom: none;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            transition: all 0.2s ease-in-out;
+            position: relative;
+            z-index: 0;
+            /* clip-path: polygon(0 0, 85% 0, 100% 100%, 0 100%); */
+            }
+
+            .tab.active {
+            background-color: #00bfa5;
+            color: white;
+            z-index: 1;
+            }
+
+        /* .tab::after {
+        content: '';
+        position: absolute;
+        right: -1px;
+        top: 0;
+        width: 12px;
+        height: 100%;
+        background-color: inherit;
+        border: 2px solid #00bfa5;
+        border-left: none;
+        border-top-right-radius: 12px;
+        transform: skewX(-15deg);
+        z-index: -1;
+        } */
+
+
+
+        .tab.active::after {
+        background-color: #00bfa5;
+        }
+
+        .content {
+        text-align: center;
+        padding: 2px;
+        }
+
+        .content img {
+        /* max-width: 75%; */
+        }
+
+        .warning {
+        color: #ff9900;
+        font-size: 16px;
+        margin: 20px 0;
+        }
+
+        .help-button {
+        background-color: #00bfa5;
+        color: white;
+        padding: 10px 25px;
+        font-size: 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        }
+
+        .tab-page {
+        display: none;
+        }
+
+        .tab-page.active {
+        display: block;
+        }
+
+
+        /* wifi连接 */
+        /* 标题 */
+        h1 {
+          color: #ff4c4c;
+          font-size: 22px;
+          margin-bottom: 15px;
+        }
+
+        /* WiFi 列表 */
+        #wifi-list {
+          height: 200px; /* 设定最大高度 */
+          list-style: none;
+          padding: 0;
+          margin-bottom: 15px;
+          background-color: #c2f3ec;
+          overflow-y: auto;
+          overflow-x: hidden; /* 可选，防止横向滚动条 */
+        }
+
+        #qr-button {
+          height: 200px; /* 设定最大高度 */
+          list-style: none;
+          padding: 0;
+          margin-bottom: 15px;
+          background-color: #c2f3ec;
+          overflow-y: auto;
+          overflow-x: hidden; /* 可选，防止横向滚动条 */
+          
+        }
+
+        /* #wifi-list li {
+          background: transparent; 
+          padding: 12px;
+          margin: 8px auto;
+          border-radius: 3px;
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+          cursor: pointer;
+          transition: background 0.3s, transform 0.2s;
+          border: 1px solid lch(51.35% 35.67 178.75);
+          width: 80%; 
+          
+        } */
+        
+
+        /* #wifi-list li:hover {
+          background: #9cf3e6;
+        } */
+
+
+        #wifi-list li {
+          background: transparent;
+          padding: 6px;
+          margin: 8px auto;
+          border-radius: 5px;
+          width: 80%;
+          /* max-width: 400px; */
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+          cursor: default;
+          transition: background 0.3s, transform 0.2s;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          border: 1px solid lch(51.35% 35.67 178.75);
+        }
+
+        #wifi-list li:hover {
+          background: #9cf3e6;
+          /* transform: scale(1.02); */
+        }
+
+        .connect-btn {
+          /* padding: 6px 6px; */
+          font-size: 14px;
+          background-color: #00bfa5;
+          color: white;
+          border: none;
+          border-radius: 4px;
+          cursor: pointer;
+        }
+
+        .connect-btn.disconnect {
+          background-color: #ff4c4c;
+        }
+
+        /* 按钮样式 */
+        button {
+          display: inline-block;
+          padding: 10px 15px;
+          font-size: 16px;
+          color: white;
+          background-color: #00bfa5;
+          border: none;
+          border-radius: 5px;
+          cursor: pointer;
+          transition: all 0.3s ease-in-out;
+          margin-top: 10px;
+        }
+
+        button:hover {
+          background-color: #3ee0b5;
+          transform: scale(1.05);
+        }
+
+        /* 自定义输入框（弹窗） */
+        .input-dialog {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          background: white;
+          padding: 20px;
+          border-radius: 10px;
+          box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+          display: none;
+          z-index: 1000;
+          width: 250px;
+          text-align: center;
+        }
+
+        .input-dialog input {
+          width: 90%;
+          padding: 8px;
+          margin: 10px 0;
+          border: 1px solid #ccc;
+          border-radius: 5px;
+          font-size: 14px;
+        }
+
+        .input-dialog input:focus {
+          outline: none;
+          border-color: #ff4c4c;
+          box-shadow: 0 0 5px rgba(255, 76, 76, 0.5);
+        }
+
+        .input-dialog button {
+          width: 100%;
+          margin-top: 10px;
+        }
+
+        /* 遮罩层样式 */
+      #loading-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5); /* 半透明背景 */
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 18px;
+        z-index: 2000;
+        display: none; /* 默认隐藏 */
+      }
+
+      /* 旋转圆环 */
+      .spinner {
+        width: 50px;
+        height: 50px;
+        border: 5px solid rgba(255, 255, 255, 0.3);
+        border-top-color: white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 10px;
+      }
+
+      /* 旋转动画 */
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+
+
+      /* 二维码 */
+        h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        input {
+            width: 300px;
+            padding: 10px;
+            margin: 8px auto;
+            border: 1px solid #41dd92;
+            border-radius: 2px;
+            font-size: 16px;
+            background-color: transparent;
+        }
+
+        
+        .qr-container {
+            margin-top: 20px;
+            display: none;
+        }
+
+        .qr-container img {
+            width: 80%;
+            height: 70%;
+            border: 4px solid #ff4c4c;
+            padding: 2px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .tab.disabled {
+          color: gray;
+          border-color: lightgray;
+          background-color: #f4f4f4;
+          cursor: not-allowed;
+        }
+        .tab.disabled:hover {
+          background-color: #f4f4f4;
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .password-wrapper input {
+            /* padding-right: 40px;  */
+        }
+
+        .toggle-password {
+            position: absolute;
+            /* right: 10px; */
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            font-size: 18px;
+            color: #888;
+            user-select: none;
+        }
+        /* #name{
+          width: 60%;
+        }
+        #password{
+          width: 60%;
+        } */
+
+    </style>
+  </head>
+  <body>
+
+      <script>
+        
+        const {locale, strings} = connect.getTranslate();
+        document.documentElement.lang = locale;
+
+      </script>
+
+      <div id="Container">
+
+
+            <!-- Tab 栏 -->
+        <div class="tab-bar">
+            <div class="tab" data-tab="serial">串口</div>
+            <div class="tab" data-tab="bluetooth">蓝牙</div>
+            <div class="tab" data-tab="wifi">WIFI</div>
+            <div class="tab" data-tab="qr">二维码</div>
+        </div>
+
+        <!-- 内容区 -->
+        <div class="content">
+            <div id="serial" class="tab-page">
+                <!-- <p>请选择要连接的设备端口：</p> -->
+                <div id="bnContainer" class="button-container"></div>
+            </div>
+            <div id="bluetooth" class="tab-page">
+                <button id="openBle">打开蓝牙连接界面</button>
+            </div>
+            <div id="wifi" class="tab-page">
+                <!-- <img src="your-wifi-icon.png" alt="WiFi illustration" />
+                <div class="warning">⚠ 没有可连接的设备</div>
+                <button class="help-button" onclick="openHelp()">帮助</button> -->
+
+                <!-- 加载遮罩层 -->
+                <div id="loading-overlay">
+                  <div class="spinner"></div>
+                  <p id="loadingImg">正在连接 Wi-Fi...</p>
+                </div>
+
+                <h1 id="currentWifi"></h1>
+                <!-- <h1>可连接wifi</h1> -->
+                <ul id="wifi-list"></ul>
+              
+                <button id="disConnect">断开当前连接</button>
+
+                <!-- 自定义密码输入框 -->
+                <div id="password-dialog" class="input-dialog">
+                  <button id="submit-password">连接</button>
+
+                  <input id="wifi-name" placeholder="请输入修改wifi名">
+                  <button id="rename">改名</button>
+                  <button id="cancel">取消</button>
+                </div>
+
+
+            </div>
+            <div id="qr" class="tab-page">
+              <div id="qr-button">
+                 <h2 id="qrTitle">Wi-Fi 二维码生成</h2>
+                <span id="account">账号</span>&nbsp;&nbsp;<input type="text" id="name">
+                <div class="password-wrapper">
+                    <span id="pwd">密码</span>&nbsp;&nbsp;<input type="password" id="password">
+                    <span id="togglePassword" class="toggle-password">🙈</span>
+                </div>
+                
+
+              </div>
+              <button id="submit">生成二维码</button>
+              <!-- <button id="submit-usb-card">开启热点并生成二维码</button> -->
+              <!-- <button id="submitonly">仅生成二维码</button> -->
+             
+              <div class="qr-container" id="qrContainer">
+                  <p id="pleaseScanQr">请扫描二维码连接 Wi-Fi(确保电脑热点开启)</p>
+                  <img id="info" src="" alt="Wi-Fi 二维码">
+              </div>
+            </div>
+            <div id="default-page" class="tab-page">
+              <h1>请先选择设备</h1>
+              <p style="color: gray;">当前没有可用的连接方式</p>
+            </div>
+        </div>
+
+        
+      </div>
+      <script>
+
+        //翻译
+        document.querySelector('.tab[data-tab="serial"]').textContent = strings['connect-device.serial'];
+        document.querySelector('.tab[data-tab="bluetooth"]').textContent = strings['connect-device.bluetooth'];
+        document.querySelector('.tab[data-tab="qr"]').textContent = strings['connect-device.qr'];
+
+        document.getElementById('disConnect').textContent=strings['connect-device.disconnectAll'];
+
+        document.getElementById('account').textContent=strings['connect-device.account'];
+        document.getElementById('pwd').textContent=strings['connect-device.pwd'];
+        document.getElementById('qrTitle').textContent=strings['connect-device.qrTitle'];
+        document.getElementById('submit').textContent=strings['connect-device.submit'];
+
+        document.getElementById('loadingImg').textContent=strings['connect-device.loadingImg'];
+
+        document.getElementById('openBle').textContent=strings['connect-device.openBle'];
+
+        document.getElementById('pleaseScanQr').textContent=strings['please-scan-qr'];
+        
+          let portStatusMap = {}; // 全局存储端口状态
+          let currentConnectedPort = null; // 当前连接的端口
+          const tabs = document.querySelectorAll('.tab');
+          const pages = document.querySelectorAll('.tab-page');
+          const extension = window.connect.getExtensions()
+
+          console.log(extension)
+          // 控制哪些 tab 可点击（true = 可点击，false = 灰置）
+          let tabEnabledMap = {
+            serial: false,
+            bluetooth: false,
+            wifi: false,
+            qr: false
+          };
+
+          if(extension.wifi==1){
+            // tabEnabledMap.serial=true
+            tabEnabledMap.bluetooth=true
+
+          }else if(extension.wifi==2){
+            tabEnabledMap.wifi=true
+            tabEnabledMap.qr=true
+            tabEnabledMap.serial=true
+            tabEnabledMap.bluetooth=true
+          }else if(extension.wifi==3){
+            tabEnabledMap.serial=true
+          }
+          let wifiIntervalId = null;
+          let offlineHandler = null;
+
+          // tabs.forEach(tab => {
+          //   tab.addEventListener('click', () => {
+          //     const selected = tab.dataset.tab;
+
+          //     tabs.forEach(t => t.classList.remove('active'));
+          //     pages.forEach(p => p.classList.remove('active'));
+
+          //     tab.classList.add('active');
+          //     document.getElementById(selected).classList.add('active');
+
+          //     if (selected === 'wifi') {
+          //       wifiInit();
+          //     } else {
+          //       wifiCleanup();
+          //       // 可在此处添加 serial 或 bluetooth 的初始化接口
+          //       if(selected === 'qr'){
+          //         qrInit()
+          //       }else if(selected === 'bluetooth'){
+          //         bleInit()
+          //       }
+          //     }
+          //   });
+          // });
+
+
+          let hasEnabledTab = false;
+
+          tabs.forEach(tab => {
+              const tabName = tab.dataset.tab;
+
+              // 设置禁用样式
+              if (!tabEnabledMap[tabName]) {
+                tab.classList.add('disabled');
+              }
+
+
+              if (tabEnabledMap[tabName]) {
+                if (!hasEnabledTab) {
+                  // 默认激活第一个可用 tab
+                  tab.classList.add('active');
+                  document.getElementById(tabName).classList.add('active');
+
+                  const selected = tab.dataset.tab;
+                  if (selected === 'wifi') {
+                    wifiInit();
+                    removeQr()
+                  } else {
+                    wifiCleanup();
+                    if(selected === 'qr'){
+                      qrInit();
+                    } else if(selected === 'bluetooth'){
+                      bleInit();
+                    }else if(selected === 'serial'){
+                      serialInit()
+                      startPortMonitoring()
+                       setInterval(() => {
+                          serialInit();
+                      }, 2000); // 每 5 秒刷新一次串口列表
+                    }
+                  }
+                }
+                hasEnabledTab = true;
+              }
+
+              tab.addEventListener('click', () => {
+                // 若当前 tab 不可点击，则忽略
+                if (!tabEnabledMap[tabName]) return;
+
+                const selected = tab.dataset.tab;
+
+                tabs.forEach(t => t.classList.remove('active'));
+                pages.forEach(p => p.classList.remove('active'));
+
+                tab.classList.add('active');
+                document.getElementById(selected).classList.add('active');
+
+                if (selected === 'wifi') {
+                  wifiInit();
+                } else {
+                  wifiCleanup();
+                  if(selected === 'qr'){
+                    qrInit();
+                  } else if(selected === 'bluetooth'){
+                    bleInit();
+                  }else if(selected === 'serial'){
+                    serialInit()
+                    startPortMonitoring()
+                    setInterval(() => {
+                        serialInit();
+                    }, 2000); // 每 5 秒刷新一次串口列表
+                  }
+                }
+              });
+          });
+
+           if (!hasEnabledTab) {
+            // 所有标签都禁用，显示默认页
+            document.getElementById('default-page').classList.add('active');
+          }
+
+          function showToast(message, duration = 3000) {
+              // 如果 toast 容器不存在，则创建一个
+              let container = document.getElementById('toast-container');
+              if (!container) {
+                  container = document.createElement('div');
+                  container.id = 'toast-container';
+                  Object.assign(container.style, {
+                      position: 'fixed',
+                      top: '20px',
+                      right: '20px',
+                      zIndex: '9999',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '10px'
+                  });
+                  document.body.appendChild(container);
+              }
+          
+              // 创建 toast 元素
+              const toast = document.createElement('div');
+              if(message == '请填写完整 Wi-Fi 信息！'){
+                toast.textContent=strings['connect-device.showToast.wifiinfo']
+              }else if(message == '热点名称至少8位！'){
+                toast.textContent=strings['connect-device.showToast.wifiNameLen']
+              }else if(message == '点击图片或按ESC键退出全屏'){
+                toast.textContent=strings['connect-device.showToast.escFullScreen']
+              }else if(message == '连接成功'){
+                toast.textContent=strings['connect-device.showToast.connectSuccess']
+              }else if(message == '连接超时，请重试'){
+                toast.textContent=strings['connect-device.showToast.connectTimeout']
+              }else if(message == '已断开'){
+                toast.textContent=strings['connect-device.showToast.disConnect']
+              }else if(message =='断开失败'){
+                toast.textContent=strings['connect-device.showToast.disconnectFailed']
+              }
+              // toast.textContent = message;
+          
+              // 样式设置
+              Object.assign(toast.style, {
+                  background: '#333',
+                  color: '#fff',
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                  opacity: '0',
+                  transform: 'translateY(-20px)',
+                  transition: 'opacity 0.3s ease, transform 0.3s ease',
+                  maxWidth: '300px'
+              });
+          
+              // 添加 toast 到容器
+              container.appendChild(toast);
+          
+              // 强制触发重绘以启用动画
+              requestAnimationFrame(() => {
+                  toast.style.opacity = '1';
+                  toast.style.transform = 'translateY(0)';
+              });
+          
+              // 3秒后移除
+              setTimeout(() => {
+                  toast.style.opacity = '0';
+                  toast.style.transform = 'translateY(-20px)';
+                  setTimeout(() => {
+                      toast.remove();
+                      // 若容器内无子元素则移除容器
+                      if (container.children.length === 0) {
+                          container.remove();
+                      }
+                  }, 300); // 等动画结束
+              }, duration);
+          }
+
+          function wifiInit() {
+            console.log('[WiFi] 初始化');
+
+            // 离线监听
+            offlineHandler = () => {
+              console.log('网络断开');
+            };
+            window.addEventListener('offline', offlineHandler);
+
+            // 加载 WiFi 列表
+            async function loadWifiList() {
+              // console.log(window.connect.currentWifi());
+              // document.getElementById('currentWifi').innerText = window.connect.currentWifi().wifi;
+
+              // try {
+              //   const networks = await window.connect.scanWifi();
+              //   const wifiListElement = document.getElementById('wifi-list');
+              //   wifiListElement.innerHTML = '';
+
+              //   networks.forEach((network, index) => {
+              //     // if (network.ssid.startsWith('ICR')) {
+              //       const li = document.createElement('li');
+              //       li.textContent = network.ssid;
+              //       li.addEventListener('click', () => connectToWifi(network.ssid));
+              //       wifiListElement.appendChild(li);
+              //     // }
+              //   });
+              // } catch (error) {
+              //   console.error('Error scanning Wi-Fi networks:', error);
+              // }
+
+
+              const current = await window.connect.currentWifi();
+              const currentSSID = current?.wifi || '';
+
+
+              try {
+                const networks = await window.connect.scanWifi();
+                const wifiListElement = document.getElementById('wifi-list');
+                wifiListElement.innerHTML = ''; // 清空列表
+
+                networks.forEach((network) => {
+                  if (network.ssid.startsWith('ICR')) {
+                    const li = document.createElement('li');
+
+                    const nameSpan = document.createElement('span');
+                    nameSpan.textContent = network.ssid;
+
+                    const btn = document.createElement('button');
+                    btn.classList.add('connect-btn');
+
+                    if (network.ssid === currentSSID) {
+                      // btn.textContent = '断开';
+                      btn.textContent=strings['connect-device.disconnect']
+                      btn.classList.add('disconnect');
+                      btn.onclick = async () => {
+                        await window.connect.disConn();
+                        await loadWifiList(); // 断开后刷新列表
+                      };
+                    } else {
+                      // btn.textContent = '连接';
+                      btn.textContent=strings['connect-device.connectwifi']
+                      btn.onclick = async () => {
+                        document.getElementById('loading-overlay').style.display = 'flex';
+
+                        try {
+                          console.log(network.ssid)
+                          await window.connect.connectWifi(network.ssid, 'lgm010611');
+                          // alert(`成功连接 ${network.ssid}`);
+                          await window.connect.isClose(true);
+                        } catch (error) {
+                          alert(`连接失败 ${network.ssid}: ${error.message}`);
+                        } finally {
+                          document.getElementById('loading-overlay').style.display = 'none';
+                          await loadWifiList(); // 成功或失败都刷新
+                        }
+                      };
+                    }
+
+                    li.appendChild(nameSpan);
+                    li.appendChild(btn);
+                    wifiListElement.appendChild(li);
+                  }
+                });
+              } catch (error) {
+                console.error('Error scanning Wi-Fi networks:', error);
+              }
+            }
+
+            wifiIntervalId = setInterval(loadWifiList, 1000);
+            loadWifiList();
+
+            const disConnect = document.getElementById('disConnect');
+            disConnect.onclick = async () => {
+              console.log('断开 WiFi');
+              await window.connect.disConn();
+            };
+
+            async function connectToWifi(ssid) {
+              const passwordDialog = document.getElementById('password-dialog');
+              const submitButton = document.getElementById('submit-password');
+              const nameInput = document.getElementById('wifi-name');
+              const rename = document.getElementById('rename');
+              const cancel = document.getElementById('cancel');
+              passwordDialog.style.display = 'block';
+              nameInput.value = '';
+
+              function containsChinese(text) {
+                return /[\u4e00-\u9fa5]/.test(text);
+              }
+
+              const response = await window.connect.sendData('whatssid');
+              console.log('[WiFi] 当前SSID响应', response);
+
+              if (ssid === response) {
+                submitButton.style.display = 'none';
+                nameInput.style.display = 'block';
+                rename.style.display = 'block';
+
+                rename.onclick = async () => {
+                  if (!nameInput.value) {
+                    alert('请输入修改后的名字');
+                    return;
+                  } else if (containsChinese(nameInput.value)) {
+                    alert('请勿输入中文');
+                    return;
+                  }
+
+                  const renameResult = await window.connect.changeName('ICRobot_' + nameInput.value);
+                  if (renameResult) {
+                    alert('改名成功，如需使用新名称请重启设备');
+                    passwordDialog.style.display = 'none';
+                  }
+                };
+              } else {
+                submitButton.style.display = 'block';
+                nameInput.style.display = 'none';
+                rename.style.display = 'none';
+
+                submitButton.onclick = async () => {
+                  const password = '123';
+                  document.getElementById('loading-overlay').style.display = 'flex';
+
+                  try {
+                    const result = await window.connect.connectWifi(ssid, password);
+                    alert(`成功连接 ${ssid}`);
+                    passwordDialog.style.display = 'none';
+                    document.getElementById('loading-overlay').style.display = 'none';
+                    await window.connect.isClose(true);
+                  } catch (error) {
+                    passwordDialog.style.display = 'none';
+                    document.getElementById('loading-overlay').style.display = 'none';
+                    alert(`连接失败 ${ssid}: ${error.message}`);
+                  }
+                };
+              }
+
+              cancel.onclick = () => {
+                passwordDialog.style.display = 'none';
+              };
+            }
+          }
+
+          function wifiCleanup() {
+            console.log('[WiFi] 清理定时器与监听器');
+
+            if (wifiIntervalId !== null) {
+              clearInterval(wifiIntervalId);
+              wifiIntervalId = null;
+            }
+
+            if (offlineHandler) {
+              window.removeEventListener('offline', offlineHandler);
+              offlineHandler = null;
+            }
+
+            // 可清理其他WiFi相关状态，例如loading或弹窗
+            document.getElementById('password-dialog').style.display = 'none';
+            document.getElementById('loading-overlay').style.display = 'none';
+          }
+
+          // 可选：初始默认激活 WiFi
+          wifiInit();
+
+          // 自动滚动到底部函数
+          function scrollToBottom() {
+              window.scrollTo({
+                  top: document.body.scrollHeight,
+                  behavior: 'smooth'
+              });
+          }
+
+
+           function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('password');
+            const isPassword = passwordInput.type === 'password';
+            passwordInput.type = isPassword ? 'text' : 'password';
+            this.textContent = isPassword ? '👁️' : '🙈';
+          }
+          async function hostPotWire(){
+             const name = document.getElementById('name').value.trim();
+            const password = document.getElementById('password').value.trim();
+            if (!name || !password) {
+                // alert("请填写完整 Wi-Fi 信息！");
+                showToast('请填写完整 Wi-Fi 信息！')
+                return;
+            }
+
+            if(name.length<8){
+                showToast('热点名称至少8位！')
+                return;
+            }
+            await window.connect.setHistory({ name, password })
+          
+
+            let isConnect=true
+            let info = await window.connect.usbWifiInfo({ name, password,isConnect });
+
+            const qrContainer = document.getElementById('qrContainer');
+            const img = document.getElementById('info');
+
+            img.src = info;
+            qrContainer.style.display = "block"; // 显示二维码
+            scrollToBottom()
+          }
+
+          function removeQr(){
+            document.getElementById('togglePassword').removeEventListener('click',togglePasswordVisibility)
+            // document.getElementById('submit-usb-card').removeEventListener('click',hostPotWire)
+          }
+
+          function qrInit(){
+              document.getElementById('name').value=window.connect.getHistory().name
+              document.getElementById('password').value=window.connect.getHistory().pass
+
+              document.getElementById('togglePassword').addEventListener('click', togglePasswordVisibility);
+              document.getElementById('submit').addEventListener('click', async () => {
+                  const name = document.getElementById('name').value.trim();
+                  const password = document.getElementById('password').value.trim();
+                  console.log(name)
+                  console.log(password);
+                  
+                  if (!name || !password) {
+                      // alert("请填写完整 Wi-Fi 信息！");
+                      showToast('请填写完整 Wi-Fi 信息！')
+                      return;
+                  }
+                  await window.connect.setHistory({ name, password })
+                
+
+                  let isConnect=true
+                  let info = await window.connect.wifiInfo({ name, password,isConnect });
+
+                  const qrContainer = document.getElementById('qrContainer');
+                  const img = document.getElementById('info');
+
+                   // 等待图片加载完成
+                  img.onload = function() {
+                    scrollToBottom(); // 确保图片加载后滚动
+                  };
+                  img.src = info;
+                  qrContainer.style.display = "block"; // 显示二维码
+                  // scrollToBottom()
+              });
+
+
+              // document.getElementById('submitonly').addEventListener('click',async()=>{
+              //   const name = document.getElementById('name').value.trim();
+              //     const password = document.getElementById('password').value.trim();
+              //     console.log(name)
+              //     console.log(password);
+                  
+              //     if (!name || !password) {
+              //         // alert("请填写完整 Wi-Fi 信息！");
+              //         showToast('请填写完整 Wi-Fi 信息！')
+              //         return;
+              //     }
+              //     await window.connect.setHistory({ name, password })
+                
+
+              //     let isConnect=false
+              //     let info = await window.connect.wifiInfo({ name, password,isConnect });
+
+              //     const qrContainer = document.getElementById('qrContainer');
+              //     const img = document.getElementById('info');
+
+              //     img.src = info;
+              //     qrContainer.style.display = "block"; // 显示二维码
+              //     scrollToBottom()
+              // })
+
+              // document.getElementById("info").onclick =async function () {
+              //   if(!document.fullscreenElement){
+              //     showToast('点击图片或按ESC键退出全屏')
+              //     await new Promise(resolve => setTimeout(resolve, 1000));
+              //     if (this.requestFullscreen) {
+              //       this.requestFullscreen(); // 进入全屏
+              //     } else if (this.webkitRequestFullscreen) {
+              //       this.webkitRequestFullscreen(); // Safari
+              //     } else if (this.msRequestFullscreen) {
+              //       this.msRequestFullscreen(); // IE11
+              //     }
+              //   }else{
+              //     document.exitFullscreen();
+              //   }
+                
+              // };
+
+              // document.getElementById("info").ondblclick = function () {
+              //   if (document.fullscreenElement) {
+              //     document.exitFullscreen();
+              //   }
+              // }
+              document.getElementById('submit-usb-card').addEventListener('click', hostPotWire);
+          }
+
+          function bleInit(){
+            document.getElementById('openBle').addEventListener('click',()=>{
+              window.connect.openBle(true)
+            })
+          }
+
+          // function serialInit(){
+          //     const ports = connect.getPorts();
+          //     let portsArr = ports.PORTS;
+          //     document.getElementById('bnContainer').innerHTML=''
+
+          //     for (let i = 0; i < portsArr.length; i++) {
+          //         let button = document.createElement('button');
+          //         button.innerText = `连接 ${portsArr[i]}`;
+          //         button.id = 'bn' + i;
+          //         button.style.backgroundColor='transparent'
+          //         button.style.border='1px solid #41dd92'
+          //         button.style.color = '#000'; 
+          //         button.style.width='70%'
+          //         button.addEventListener('click', () => {
+          //             connect.sendConnectPort(portsArr[i]);
+          //             setTimeout(() => {
+          //                 const flag = connect.isConnected();
+          //                 if (flag.flag) {
+          //                     alert('✅ 连接成功！');
+          //                 } else {
+          //                     alert('❌ 连接失败，请重试。');
+          //                 }
+          //             }, 800);
+          //         });
+          //         document.getElementById('bnContainer').appendChild(button);
+          //     }
+          // }
+
+          
+
+          // function serialInit() {
+          //     const ports = connect.getPorts();
+          //     const portsArr = ports.PORTS;
+          //     const bnContainer = document.getElementById('bnContainer');
+          //     bnContainer.innerHTML = ''; 
+              
+          //     // 获取当前连接状态
+          //     const statusResponse = connect.whatPortConnect();
+          //     currentConnectedPort = statusResponse.port || null;
+              
+          //     portsArr.forEach(port => {
+          //         const isConnected = port === currentConnectedPort;
+          //         portStatusMap[port] = isConnected; // 更新状态映射
+                  
+          //         bnContainer.style.height='300px'
+          //         bnContainer.style.backgroundColor='#c2f3ec'
+          //         // 创建UI元素
+          //         const buttonContainer = document.createElement('div');
+          //         // buttonContainer.style.display = 'flex';
+          //         // buttonContainer.style.alignItems = 'center';
+          //         // buttonContainer.style.marginBottom = '10px';
+
+          //         buttonContainer.style.display = 'flex';
+          //         buttonContainer.style.justifyContent = 'center'; // 水平居中[6,7](@ref)
+          //         buttonContainer.style.alignItems = 'center';      // 垂直居中[6,7](@ref)
+          //         buttonContainer.style.margin = '0 auto 10px';     // 上下边距+水平居中[8](@ref)
+          //         buttonContainer.style.width = '80%';
+          //         buttonContainer.style.backgroundColor = 'transparent'; // 背景透明[3,9](@ref)
+          //         buttonContainer.style.border = '1px solid #00ff00';    // 绿色边框[4,9](@ref)
+          //         buttonContainer.style.borderRadius = '4px';            // 圆角边框
+          //         buttonContainer.style.padding = '8px';                 // 内边距
+          //         buttonContainer.id = `port-${port}`; // 唯一ID便于后续更新
+                  
+          //         const portLabel = document.createElement('span');
+          //         portLabel.textContent = port;
+          //         portLabel.style.flex = '1';
+          //         portLabel.style.textAlign = 'left';
+          //         portLabel.style.marginRight = '10px';
+                  
+          //         const actionButton = document.createElement('button');
+          //         updateButtonState(actionButton, isConnected); // 统一更新按钮状态
+                  
+          //         // 点击事件处理
+          //         actionButton.addEventListener('click', async () => {
+          //             if (portStatusMap[port]) {
+          //                 await handleDisconnect(port);
+          //             } else {
+          //                 await handleConnect(port);
+          //             }
+          //             updatePortUI(port); // 更新单个端口的UI
+          //         });
+                  
+          //         buttonContainer.appendChild(portLabel);
+          //         buttonContainer.appendChild(actionButton);
+          //         bnContainer.appendChild(buttonContainer);
+          //     });
+
+          //     startPortMonitoring();
+          // }
+
+          // // 更新按钮状态
+          // function updateButtonState(button, isConnected) {
+          //     button.innerText = isConnected ? '断开' : '连接';
+          //     button.style.backgroundColor = isConnected ? '#ff4c4c' : '#00bfa5';
+          //     button.style.color = 'white';
+          //     button.style.border = 'none';
+          //     button.style.borderRadius = '4px';
+          //     button.style.padding = '5px 10px';
+          //     button.style.cursor = 'pointer';
+          // }
+
+          // // 处理连接
+          // async function handleConnect(port) {
+          //     connect.sendConnectPort(port);
+          //     const button = document.querySelector(`#port-${port} button`);
+          //     button.innerText = '连接中...';
+          //     button.style.backgroundColor = '#ff9900';
+              
+          //     // 添加连接状态检测
+          //     const checkInterval = setInterval(() => {
+          //         const status = connect.whatPortConnect();
+          //         if (status.port === port) {
+          //             portStatusMap[port] = true;
+          //             currentConnectedPort = port;
+          //             clearInterval(checkInterval);
+          //             updatePortUI(port);
+          //             showToast(`✅ ${port} 连接成功`);
+          //         }
+          //     }, 300);
+          // }
+
+          // // 处理断开
+          // async function handleDisconnect(port) {
+          //     connect.disconnectPort();
+          //     portStatusMap[port] = false;
+          //     if (currentConnectedPort === port) currentConnectedPort = null;
+          //     showToast(`已断开 ${port}`);
+          // }
+
+          // // 更新单个端口的UI
+          // function updatePortUI(port) {
+          //     const container = document.getElementById(`port-${port}`);
+          //     if (!container) return;
+              
+          //     const button = container.querySelector('button');
+          //     updateButtonState(button, portStatusMap[port]);
+          // }
+
+          // // 定期检查所有端口状态（可选）
+          // function startPortMonitoring() {
+          //     setInterval(() => {
+          //         const status = connect.whatPortConnect();
+          //         if (status.port !== currentConnectedPort) {
+          //             // 连接状态变化时更新所有UI
+          //             Object.keys(portStatusMap).forEach(port => {
+          //                 portStatusMap[port] = (port === status.port);
+          //                 updatePortUI(port);
+          //             });
+          //             currentConnectedPort = status.port;
+          //         }
+          //     }, 2000); // 每2秒检查一次
+          // }
+
+
+          function serialInit() {
+            
+            const ports = connect.getPorts();
+            const portsArr = ports.PORTS;
+            console.log(portsArr)
+            const bnContainer = document.getElementById('bnContainer');
+            bnContainer.innerHTML = '';
+            portStatusMap = {}; // ✅ 清空旧状态
+
+            // 获取当前连接状态
+            const statusResponse = connect.whatPortConnect();
+            currentConnectedPort = statusResponse.port || null;
+
+            portsArr.forEach(port => {
+                const isConnected = port.path === currentConnectedPort;
+                portStatusMap[port.path] = isConnected;
+
+                bnContainer.style.height = '280px';
+                bnContainer.style.backgroundColor = '#c2f3ec';
+                bnContainer.style.overflowY = 'auto';
+
+                const buttonContainer = document.createElement('div');
+                buttonContainer.style.display = 'flex';
+                buttonContainer.style.justifyContent = 'center';
+                buttonContainer.style.alignItems = 'center';
+                buttonContainer.style.margin = '0 auto 10px';
+                buttonContainer.style.width = '80%';
+                buttonContainer.style.backgroundColor = 'transparent';
+                buttonContainer.style.border = '1px solid #00ff00';
+                buttonContainer.style.borderRadius = '4px';
+                buttonContainer.style.padding = '8px';
+                buttonContainer.id = `port-${port.path}`;
+
+                const portLabel = document.createElement('span');
+                portLabel.textContent = port.label;
+                portLabel.style.flex = '1';
+                portLabel.style.textAlign = 'left';
+                portLabel.style.marginRight = '10px';
+
+                const actionButton = document.createElement('button');
+                updateButtonState(actionButton, isConnected);
+
+                actionButton.addEventListener('click', async () => {
+                    // 如果已连接其他串口，先断开它
+                    if (currentConnectedPort && currentConnectedPort !== port.path) {
+                        await handleDisconnect(currentConnectedPort);
+                    }
+
+                    // await new Promise(resolve => setTimeout(resolve, 1000));
+
+                    if (portStatusMap[port.path]) {
+                        await handleDisconnect(port.path);
+                    } else {
+                        await handleConnect(port.path);
+                    }
+                });
+
+                buttonContainer.appendChild(portLabel);
+                buttonContainer.appendChild(actionButton);
+                bnContainer.appendChild(buttonContainer);
+            });
+
+            // startPortMonitoring();
+        }
+
+        function updateButtonState(button, isConnected) {
+            // button.innerText = isConnected ? '断开' : '连接';
+            button.innerText = isConnected ? strings['connect-device.disconnect'] : strings['connect-device.connectwifi'];
+            
+            button.style.backgroundColor = isConnected ? '#ff4c4c' : '#00bfa5';
+            button.style.color = 'white';
+            button.style.border = 'none';
+            button.style.borderRadius = '4px';
+            button.style.padding = '5px 10px';
+            button.style.cursor = 'pointer';
+        }
+
+        async function handleConnect(port) {
+            const button = document.querySelector(`#port-${port} button`);
+            button.disabled = true;
+            // button.innerText = '连接中...';
+            button.innerText =strings['connect-device.connecting']
+            button.style.backgroundColor = '#ff9900';
+
+            connect.sendConnectPort(port);
+
+            const checkInterval = setInterval(() => {
+                const status = connect.whatPortConnect();
+                console.log(status.port)
+                if (status.port === port) {
+                    clearInterval(checkInterval);
+                    portStatusMap = {}; // 重置所有状态
+                    portStatusMap[port] = true;
+                    currentConnectedPort = port;
+
+                    clearTimeout(timeout)
+                    updateAllPortUI();
+                    showToast(`连接成功`);
+                }
+            }, 300);
+
+            // 设置最大超时时间（防止死循环）
+            let timeout=setTimeout(() => {
+                clearInterval(checkInterval);
+
+                // 超时未连接成功，回退按钮状态
+                if (currentConnectedPort !== port) {
+                    portStatusMap[port] = false;
+                    updateAllPortUI();
+                    showToast(`连接超时，请重试`);
+                }
+            }, 5000);
+
+        }
+
+        async function handleDisconnect(port) {
+            let result = await connect.disconnectPort();
+            if(result.success){
+              portStatusMap[port] = false;
+              if (currentConnectedPort === port) currentConnectedPort = null;
+
+              updateAllPortUI();
+              showToast(`已断开`);
+            }else{
+              showToast(`断开失败`);
+            }
+            
+        }
+
+        function updatePortUI(port) {
+            const container = document.getElementById(`port-${port}`);
+            if (!container) return;
+            const button = container.querySelector('button');
+            updateButtonState(button, portStatusMap[port]);
+            button.disabled = false;
+        }
+
+        function updateAllPortUI() {
+            Object.keys(portStatusMap).forEach(port => {
+                updatePortUI(port);
+            });
+        }
+
+        function startPortMonitoring() {
+            setInterval(() => {
+                const status = connect.whatPortConnect();
+                if (status.port !== currentConnectedPort) {
+                    Object.keys(portStatusMap).forEach(port => {
+                        portStatusMap[port] = (port === status.port);
+                    });
+                    currentConnectedPort = status.port;
+                    updateAllPortUI();
+                }
+            }, 2000);
+        }
+
+       
+
+
+
+        
+      </script>
+
+    <!-- </main> -->
+  </body>
+</html>
