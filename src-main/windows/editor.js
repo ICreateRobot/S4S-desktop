@@ -827,6 +827,11 @@ class EditorWindow extends ProjectRunningWindow {
     });
     
 
+    // microbit USB 直接运行程序
+    this.ipc.handle('microbit-usb-run', async (_, code) => {
+      return serialManager.mB_runCodeSerial(code);
+    });
+    
     // USB 程序下载
     this.ipc.handle('usb-download-flash', async (_, code) => {
       return serialManager.downloadCodeSerial(code);

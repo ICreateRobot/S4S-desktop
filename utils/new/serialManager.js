@@ -39,6 +39,8 @@ const DEVICE_CONFIGS = {
     },
     ESP32: {
         name: 'ESP32',
+         vendorId: 0x1A86, 
+        productIds: [ 0x7523], 
         scanStrategy: 'serial-only'
     }
 };
@@ -805,12 +807,23 @@ async function sendCommandSerial_D(command,type) {
     
 }
 
+
+//######################################## microbit 运行长程序（粘贴模式） ########################################
+async function mB_runCodeSerial(code) {
+    // 中断当前程序
+    await sendSerialCommand('\x03'); 
+    await sendSerialCommand('\x05',200);
+    await delay(100);
+    serialDeviceState.serialPort.write( code );
+    await delay(100);
+    await sendSerialCommand('\x04');
+}
 //######################################## microbit 烧录固件（下载程序） ########################################
 let abortCheckTimer = null;//检测终止下载
 let isFlashing = false;//下载中
 let flashAbort = false;
 
-async function downloadCodeSerial(code) {
+async function downloadCodeSerial(code) {//主函数代码，扩展列表
     try {
         if (!serialDeviceState.usbDevice) {
           throw new Error("USB 设备未连接，无法烧录");
@@ -819,8 +832,15 @@ async function downloadCodeSerial(code) {
         // flashAbort = false;
         // isFlashing = true;
 
+        // 检测是否有对应的扩展文件
+        //detectExtensionFile(packageList)
+
+        // 递归检测扩展
+        const extensionFiles = detectExtensionFile(code);
+
+
         // 生成 HEX 文件
-        const hexPath = await generateV2Hex("Microbit_LinkBot_V1.0.0",code);//固件名称未来需要提取到统一配置的文件中,统一到gui中
+        const hexPath = await generateV2Hex("Microbit_LinkBot_V1.0.0",code,extensionFiles);//固件名称未来需要提取到统一配置的文件中,统一到gui中
         const hexData = fs.readFileSync(hexPath);
 
         // 创建 DAPLink 传输层
@@ -898,8 +918,64 @@ function getResourcePath(relativePath) {
     }
 }
 
+// 递归检测项目中所有扩展文件（会将文件直接读取出来，不需要再次读取了）
+function detectExtensionFile(mainCode){
+    const baseDir = getResourcePath('/PythonUploadFile');
+
+    const visited = new Set();
+    const result = new Map();
+
+    function scan(code, parent = "main.py") {
+        const modules = parsePythonImports(code);
+
+        for (const mod of modules) {
+            if (visited.has(mod)) continue;
+            visited.add(mod);
+            const filePath = path.join(baseDir, mod + ".py");
+
+            // 如果不存在, 报错(后续需要统一报错格式与编码，方便前端进行识别与转换)
+            if (!fs.existsSync(filePath)) {
+                throw new Error(
+                    `缺少Python扩展模块: ${mod}.py\n被 ${parent} 引用`
+                );
+            }
+
+            // 读取文件
+            const subCode = fs.readFileSync(filePath, 'utf8');
+            result.set(mod, subCode);
+            // 递归检测
+            scan(subCode, mod + ".py");
+        }
+    }
+    scan(mainCode);
+    return result;
+}
+
+//解析导入的扩展python
+function parsePythonImports(code) {
+    const modules = new Set();
+
+    const importRegex = /^\s*import\s+([a-zA-Z0-9_]+)/gm;
+    const fromRegex = /^\s*from\s+([a-zA-Z0-9_]+)\s+import/gm;
+
+    const exclude = new Set(['microbit', 's4s']); // 需要排除的模块
+
+    let match;
+
+    while ((match = importRegex.exec(code)) !== null) {
+        modules.add(match[1]);
+    }
+
+    while ((match = fromRegex.exec(code)) !== null) {
+        modules.add(match[1]);
+    }
+
+    // 过滤掉内置库
+    return Array.from(modules).filter(m => !exclude.has(m));
+}
+
 //hex生成
-async function generateV2Hex(firmwareName,code) {
+async function generateV2Hex(firmwareName,code,extensionModules = new Map()) {
     try {
         const baseHexPath = getResourcePath('/microbit_firmware/'+firmwareName+'.hex')
         const hexContent = fs.readFileSync(baseHexPath, 'utf8');
@@ -914,6 +990,12 @@ async function generateV2Hex(firmwareName,code) {
         } else if (fsHex.exists('main.py')) {
             fsHex.remove('main.py');
         }
+
+        // 写入扩展文件
+        for (const [name, moduleCode] of extensionModules) {
+            fsHex.write(name + '.py', moduleCode);
+        }
+
     
         // 生成 HEX 数据
         const boardHex = fsHex.getIntelHex();
@@ -1150,6 +1232,10 @@ async function tempConnectAndFlash(port, code) {
     }
 }
 
+// 延时函数
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 
 module.exports = {
@@ -1163,6 +1249,7 @@ module.exports = {
     sendCommandSerial_D,
     downloadCodeSerial,
     cancelDownloadCodeSerial,
-    unifiedFlashFirmware
+    unifiedFlashFirmware,
+    mB_runCodeSerial
 };
   

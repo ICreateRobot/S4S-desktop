@@ -1,0 +1,255 @@
+{
+  "name": "tinkertek-desktop",
+  "description": "AI Coding Companion for kids.",
+  "version": "0.0.3",
+  "license": "GPL-3.0",
+  "author": {
+    "email": "contact@turbowarp.org",
+    "name": "Thomas Weber"
+  },
+  "scripts": {
+    "fetch": "node scripts/download-library-files.js && node scripts/download-packager.js && node scripts/prepare-extensions.js",
+    "webpack:compile": "webpack",
+    "webpack:watch": "webpack --watch",
+    "webpack:prod": "cross-env NODE_ENV=production webpack",
+    "electron:start": "electron src-main/entrypoint.js",
+    "electron:package:dir": "electron-builder --dir"
+  },
+  "dependencies": {
+    "@abandonware/noble": "^1.9.2-26",
+    "@microbit/microbit-fs": "^0.10.0",
+    "@microbit/microbit-universal-hex": "^0.2.2",
+    "axios": "^1.11.0",
+    "bottleneck": "^2.19.5",
+    "connect-timeout": "^1.9.1",
+    "cors": "^2.8.5",
+    "dapjs": "^2.3.0",
+    "electron-updater": "^6.6.2",
+    "express": "4.21.2",
+    "iconv-lite": "^0.6.3",
+    "intel-hex": "^0.2.0",
+    "net": "^1.0.2",
+    "node-hid": "^3.2.0",
+    "node-wifi": "^2.0.16",
+    "qrcode": "^1.5.4",
+    "semver": "^7.7.2",
+    "serialport": "^13.0.0",
+    "sudo-prompt": "^9.2.1",
+    "systeminformation": "^5.27.7",
+    "usb": "^2.16.0",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.27.4",
+    "@babel/preset-env": "^7.12.16",
+    "@babel/preset-react": "^7.13.13",
+    "@electron/fuses": "^1.7.0",
+    "@turbowarp/extensions": "github:TurboWarp/extensions#master",
+    "adm-zip": "^0.5.16",
+    "autoprefixer": "^9.8.8",
+    "babel-loader": "^8.4.1",
+    "copy-webpack-plugin": "^6.4.1",
+    "cross-env": "^7.0.3",
+    "css-loader": "^1.0.1",
+    "electron": "^36.5.0",
+    "electron-builder": "^26.0.12",
+    "file-loader": "^6.2.0",
+    "postcss": "^8.4.13",
+    "postcss-import": "^14.0.0",
+    "postcss-loader": "^4.2.0",
+    "postcss-simple-vars": "^6.0.3",
+    "scratch-gui": "file:../scratch-gui-S4S",
+    "style-loader": "^0.23.0",
+    "url-loader": "^4.1.1",
+    "webpack": "4.47.0",
+    "webpack-cli": "^4.10.0"
+  },
+  "overrides": {
+    "webpack@4.47.0": {
+      "terser-webpack-plugin": "^4.2.3"
+    }
+  },
+  "homepage": "https://desktop.turbowarp.org/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/TurboWarp/desktop.git"
+  },
+  "bugs": {
+    "url": "https://github.com/TurboWarp/desktop/issues",
+    "email": "contact@turbowarp.org"
+  },
+  "main": "./src-main/entrypoint.js",
+  "build": {
+    "appId": "org.turbowarp.desktop",
+    "productName": "TinkerTek",
+    "icon": "build/robotIcon.png",
+    "electronDownload": {
+      "mirror": "https://npmmirror.com/mirrors/electron/"
+    },
+    "files": [
+      "node_modules/**/*",
+      "src-main/**/*",
+      "src-preload/**/*",
+      "src-renderer/**/*",
+      "dist-renderer-webpack/**/*",
+      "dist-library-files/**/*",
+      "dist-extensions/**/*",
+      "utils/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "art/icon.png",
+        "to": "icon.png"
+      },
+      {
+        "from": "art/icon.svg",
+        "to": "icon.svg"
+      },
+      {
+        "from": "utils/",
+        "to": "utils/"
+      },
+      {
+        "from": "build/robotIcon.png",
+        "to": "build/robotIcon.png"
+      }
+    ],
+    "asarUnpack": [
+      "utils/*"
+    ],
+    "win": {
+      "artifactName": "${productName} Portable ${version} ${arch}.${ext}",
+      "icon": "build/favicon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": "x64"
+        },
+        {
+          "target": "portable",
+          "arch": "x64"
+        }
+      ]
+    },
+    "appx": {
+      "artifactName": "${productName}-MS-Store-${version}-${arch}.${ext}",
+      "applicationId": "tinkertek",
+      "displayName": "tinkertek",
+      "identityName": "45747ThomasWeber.TurboWarpDesktop",
+      "publisher": "CN=18FA7D4F-01BF-49F2-BF56-782DCEA49C69",
+      "publisherDisplayName": "Thomas Weber",
+      "backgroundColor": "#4c97ff",
+      "showNameOnTiles": true,
+      "languages": [
+        "en-US",
+        "nl",
+        "de",
+        "it",
+        "ko"
+      ]
+    },
+    "nsis": {
+      "artifactName": "${productName}-Setup-${version}-${arch}.${ext}",
+      "oneClick": false,
+      "deleteAppDataOnUninstall": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "mac": {
+      "artifactName": "${productName}-Setup-${version}.${ext}",
+      "icon": "build/icon.icns",
+      "category": "public.app-category.education",
+      "darkModeSupport": true,
+      "gatekeeperAssess": false,
+      "hardenedRuntime": true,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "extendInfo": {
+        "ITSAppUsesNonExemptEncryption": false,
+        "LSMultipleInstancesProhibited": true,
+        "NSCameraUsageDescription": "This app requires camera access when using the video sensing blocks.",
+        "NSMicrophoneUsageDescription": "This app requires microphone access when recording sounds or detecting loudness."
+      },
+      "target": [
+        {
+          "arch": "universal",
+          "target": "dmg"
+        }
+      ]
+    },
+    "mas": {
+      "hardenedRuntime": false,
+      "entitlements": "build/entitlements.mas.plist",
+      "entitlementsInherit": "build/entitlements.mas.inherit.plist",
+      "provisioningProfile": "build/distribution.provisionprofile"
+    },
+    "masDev": {
+      "type": "development",
+      "provisioningProfile": "build/development.provisionprofile"
+    },
+    "linux": {
+      "artifactName": "${productName}-${os}-${arch}-${version}.${ext}",
+      "icon": "./build/",
+      "synopsis": "Mod of Scratch with a compiler and more features.",
+      "description": "TurboWarp is a Scratch mod with a compiler to run projects faster, dark mode for your eyes, a bunch of addons to improve the editor, and more.",
+      "category": "Development",
+      "desktop": {
+        "entry": {
+          "StartupWMClass": "turbowarp-desktop",
+          "Keywords": "scratch;"
+        }
+      },
+      "extraFiles": [
+        "linux-files"
+      ],
+      "target": [
+        {
+          "target": "deb"
+        },
+        {
+          "target": "appimage"
+        },
+        {
+          "target": "tar.gz"
+        }
+      ]
+    },
+    "snap": {
+      "summary": "Scratch mod with a compiler, dark mode, a bunch of addons, and more.",
+      "allowNativeWayland": true,
+      "plugs": [
+        "default",
+        "camera",
+        "audio-record",
+        "joystick",
+        "removable-media"
+      ]
+    },
+    "appImage": {
+      "license": null
+    },
+    "fileAssociations": [
+      {
+        "ext": "sb3",
+        "name": "Scratch 3 Project",
+        "description": "Scratch 3 Project",
+        "role": "Editor",
+        "mimeType": "application/x.scratch.sb3"
+      },
+      {
+        "ext": "sb2",
+        "name": "Scratch 2 Project",
+        "description": "Scratch 2 Project",
+        "role": "Editor",
+        "mimeType": "application/x.scratch.sb2"
+      },
+      {
+        "ext": "sb",
+        "name": "Scratch 1 Project",
+        "description": "Scratch 1 Project",
+        "role": "Editor",
+        "mimeType": "application/x.scratch.sb"
+      }
+    ]
+  },
+  "private": true
+}

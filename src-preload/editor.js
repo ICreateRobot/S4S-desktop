@@ -45,6 +45,7 @@ contextBridge.exposeInMainWorld('EditorPreload', {
   enterReplMode: () => ipcRenderer.invoke('serial-enter-repl'),//进入repl模式
   exitReplMode: () => ipcRenderer.invoke('serial-exit-repl'),//退出烧录模式（进入烧录）
 
+  mBUsbRunCode: (code) => ipcRenderer.invoke('microbit-usb-run',code),//microbit直接运行代码
   usbdownloadCode: (code) => ipcRenderer.invoke('usb-download-flash',code),//下载代码
   onFlashProgress: (callback) => ipcRenderer.on('flash-progress', (_, percent) => callback(percent)),// 监听烧录进度
   onFlashDone: cb => ipcRenderer.on("flash-done", cb),//下载完成
