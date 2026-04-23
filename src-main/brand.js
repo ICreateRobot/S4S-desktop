@@ -1,6 +1,6 @@
-const PLATFORM_NAME = 'TinkerTek';
-const APP_NAME = 'TinkerTek';
-const PACKAGER_NAME = 'TinkerTek Packager';
+const PLATFORM_NAME = 'TinkerCode';
+const APP_NAME = 'TinkerCode';
+const PACKAGER_NAME = 'TinkerCode Packager';
 
 module.exports = {
   PLATFORM_NAME,

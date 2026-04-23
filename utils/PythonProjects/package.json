@@ -81,7 +81,7 @@
   "main": "./src-main/entrypoint.js",
   "build": {
     "appId": "org.turbowarp.desktop",
-    "productName": "TinkerTek",
+    "productName": "TinkerCode",
     "icon": "build/robotIcon.png",
     "electronDownload": {
       "mirror": "https://npmmirror.com/mirrors/electron/"
