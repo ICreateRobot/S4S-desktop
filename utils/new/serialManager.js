@@ -958,7 +958,7 @@ function parsePythonImports(code) {
     const importRegex = /^\s*import\s+([a-zA-Z0-9_]+)/gm;
     const fromRegex = /^\s*from\s+([a-zA-Z0-9_]+)\s+import/gm;
 
-    const exclude = new Set(['microbit', 's4s']); // 需要排除的模块
+    const exclude = new Set(['microbit', 's4s', "time"]); // 需要排除的模块
 
     let match;
 
