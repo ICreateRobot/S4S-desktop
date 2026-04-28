@@ -535,9 +535,11 @@ function setupSerialListeners(deviceType) {
                 return
             }
             
+            resultData = parseCleanedBuffer(resultData);
+            console.log(' result Data:', resultData);
             if (serialDeviceState.currentResolve) {
-            serialDeviceState.currentResolve(resultData);
-            serialDeviceState.currentResolve = null;
+                serialDeviceState.currentResolve(resultData);
+                serialDeviceState.currentResolve = null;
             }
             
         })
@@ -1235,6 +1237,36 @@ async function tempConnectAndFlash(port, code) {
 // 延时函数
 function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// 辅助函数--解析串口返回的 Buffer 数据，尝试转换为数字或文本
+function parseCleanedBuffer(cleanedData) {
+    if (cleanedData.length === 0) return null;
+    
+    // 1. 尝试作为文本解析
+    const asText = cleanedData.toString('ascii');
+    
+    // 2. 如果是纯数字
+    if (/^\d+$/.test(asText)) {
+        return Number(asText);
+    }
+    
+    // 3. 如果是16位整数编码
+    if (cleanedData.length === 2) {
+        const value = cleanedData.readUInt16BE(0);
+        const high = (value >> 8) & 0xFF;
+        const low = value & 0xFF;
+        
+        if (high >= 0x20 && high <= 0x7E && low >= 0x20 && low <= 0x7E) {
+            const str = String.fromCharCode(high) + String.fromCharCode(low);
+            if (/^\d+$/.test(str)) {
+                return Number(str);
+            }
+        }
+    }
+    
+    // 4. 默认返回文本
+    return asText;
 }
 
 
