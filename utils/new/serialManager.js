@@ -524,7 +524,7 @@ function setupSerialListeners(deviceType) {
         // });
     }else if(deviceType === "Arduino"){
         serialDeviceState.parser.on('data', data => {
-            ///console.log('ARDUINO DATA:', data);
+            console.log('ARDUINO DATA:', data);
             let resultData = Buffer.from(data);
 
             if (data.length === 3 && data.equals(Buffer.from([0x3e, 0x3e, 0x3e]))) {// 收到纯分隔符
