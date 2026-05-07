@@ -647,12 +647,14 @@ async function replSerial(type) {
 
         // 中断当前程序
         await sendSerialCommand('\x03'); 
-        if(type === "Microbit"){
-            await sendSerialCommand('from microbit import *\r',200);
-        }
+        
         
         await sendSerialCommand('from s4s import *\r',200);
-        await sendSerialCommand('display.show(Image.HEART)\n\r', 200);
+        if(type === "Microbit"){
+            await sendSerialCommand('from microbit import *\r',200);
+            await sendSerialCommand('display.show(Image.HEART)\n\r', 200);
+        }
+        
         
         serialDeviceState.replActive = true;
         switchSerialParser(type,"repl")
