@@ -691,6 +691,8 @@ async function runSerialCommand(command, type){
       serialDeviceState.serialBuffer = '';// 清空上次结果
       if(type === "Microbit"){
         serialDeviceState.serialPort.write( command + '\r' );
+      }else if(type === "ESP32"){
+        serialDeviceState.serialPort.write( command + '\r' );
       } else{
         serialDeviceState.serialPort.write(Buffer.from(command) );
       }
