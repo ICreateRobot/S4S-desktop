@@ -575,6 +575,12 @@ function switchSerialParser(deviceType, mode) {
         } else {
             setupMicrobitNormalParser();
         }
+    }else if (deviceType === 'ESP32') {
+        if (mode === 'repl') {
+            setupMicrobitReplParser();
+        } else {
+            setupMicrobitNormalParser();
+        }
     }
 }
 
@@ -632,7 +638,7 @@ function setupMicrobitNormalParser() {
 //######################################## 模式切换 ########################################
 
 // 进入repl(microbit用)
-async function replSerial() {
+async function replSerial(type) {
     try {
         if (!serialDeviceState.serialPort ) {//|| serialDeviceState.replActive
           return { success: false, error: "串口未连接或已处于REPL模式"};
@@ -641,12 +647,15 @@ async function replSerial() {
 
         // 中断当前程序
         await sendSerialCommand('\x03'); 
-        await sendSerialCommand('from microbit import *\r',200);
+        if(type === "Microbit"){
+            await sendSerialCommand('from microbit import *\r',200);
+        }
+        
         await sendSerialCommand('from s4s import *\r',200);
         await sendSerialCommand('display.show(Image.HEART)\n\r', 200);
         
         serialDeviceState.replActive = true;
-        switchSerialParser("Microbit","repl")
+        switchSerialParser(type,"repl")
         return { success: true , message: 'REPL模式已激活'};
     } catch (err) {
         return { success: false, error: err.message };

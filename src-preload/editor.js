@@ -44,6 +44,7 @@ contextBridge.exposeInMainWorld('EditorPreload', {
   serialSendCommand: (command,type) => ipcRenderer.invoke('serial-send-command', command,type),//发送数据
   enterReplMode: () => ipcRenderer.invoke('serial-enter-repl'),//进入repl模式
   exitReplMode: () => ipcRenderer.invoke('serial-exit-repl'),//退出烧录模式（进入烧录）
+  enterReplModeESP: () => ipcRenderer.invoke('serial-enter-repl-esp'),//进入repl模式
 
   mBUsbRunCode: (code) => ipcRenderer.invoke('microbit-usb-run',code),//microbit直接运行代码
   usbdownloadCode: (code) => ipcRenderer.invoke('usb-download-flash',code),//下载代码

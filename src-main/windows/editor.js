@@ -814,8 +814,15 @@ class EditorWindow extends ProjectRunningWindow {
  
     //进入repl模式
     this.ipc.handle('serial-enter-repl', async () => {
-      return serialManager.replSerial();
+      return serialManager.replSerial("Microbit");
     });
+
+    //进入repl模式esp
+    this.ipc.handle('serial-enter-repl-esp', async () => {
+      return serialManager.replSerial("ESP32");
+    });
+
+    
 
     // 发送数据
     this.ipc.handle('serial-send-command', async (_, command,type) => {
