@@ -39,7 +39,7 @@ const DEVICE_CONFIGS = {
     },
     ESP32: {
         name: 'ESP32',
-         vendorId: 0x1A86, 
+        vendorId: 0x1A86, 
         productIds: [ 0x7523], 
         scanStrategy: 'serial-only'
     }
@@ -684,7 +684,7 @@ async function sendCommandSerial(command,type) {
 async function runSerialCommand(command, type){
     try {
       if (!serialDeviceState.serialPort) {
-        return { success: false, error: "未连接设备" };
+        return { success: false, errorType: "ununited", error: "未连接设备" };
       }
       console.log(command)
       //发送
