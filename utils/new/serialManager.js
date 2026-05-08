@@ -695,7 +695,7 @@ async function sendCommandSerial(command,type) {
 async function runSerialCommand(command, type){
     try {
       if (!serialDeviceState.serialPort) {
-        return { success: false, errorType: "ununited", error: "未连接设备" };
+        return { success: false, id: "001", error: "unconnected device" };//未连接设备
       }
       console.log(command)
       //发送
@@ -739,7 +739,7 @@ async function runSerialCommand(command, type){
   
       return { success: true, response: output };
     } catch (err) {
-      return { success: false, error: err.message };
+      return { success: false, id: "", error: err.message };
     }
 }
 
