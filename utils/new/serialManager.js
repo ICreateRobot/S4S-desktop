@@ -1040,6 +1040,20 @@ async function cancelDownloadCodeSerial() {
 }
 
 
+//######################################## ESP 下载程序 ########################################
+async function downloadCodeSerial_ESP(code) {
+    try {
+        if (!serialDeviceState.usbDevice) {
+          throw new Error("设备未连接，无法烧录");
+        }
+
+    } catch (err) {
+        
+    }finally {
+       
+    }
+}
+
 //######################################## 统一固件烧录接口 ########################################
 // 分发
 async function unifiedFlashFirmware(deviceType, firmwareName, port) {
@@ -1293,6 +1307,7 @@ module.exports = {
     sendCommandSerial,
     sendCommandSerial_D,
     downloadCodeSerial,
+    downloadCodeSerial_ESP,
     cancelDownloadCodeSerial,
     unifiedFlashFirmware,
     mB_runCodeSerial

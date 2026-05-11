@@ -840,8 +840,12 @@ class EditorWindow extends ProjectRunningWindow {
     });
     
     // USB 程序下载
-    this.ipc.handle('usb-download-flash', async (_, code) => {
-      return serialManager.downloadCodeSerial(code);
+    this.ipc.handle('usb-download-flash', async (_, code,device) => {
+      if(device == "Microbit"){
+          return serialManager.downloadCodeSerial(code);
+      }else if(device == "ESP32"){
+          return serialManager.downloadCodeSerial_ESP(code);
+      } 
     });
 
     // 中止USB 程序下载
