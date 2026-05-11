@@ -6,7 +6,7 @@ t.speed(0)  # 最快速度
 
 # 绘制圆形
 t.circle(50)
-dsda
+
 # 绘制螺旋
 for i in range(10000):
     t.circle(i)
