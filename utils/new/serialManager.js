@@ -438,30 +438,42 @@ async function closeSerialPort(port) {
 //辅助函数--清理usb
 async function closeUsbDevice(device) {
     return new Promise(resolve => {
-      try {
-            // 检查设备是否还连接
+        try {
+            if (!device) {
+                return resolve();
+            }
+            // 已物理断开
             const stillConnected = usb.getDeviceList().some(d =>
-            d.busNumber === device.busNumber && d.deviceAddress === device.deviceAddress
+                d.busNumber === device.busNumber &&
+                d.deviceAddress === device.deviceAddress
             );
-    
-            if (!stillConnected) {
-            console.warn('USB设备已物理断开');
-            return resolve();
+
+            // 即使断开了，也继续尝试释放
+            const iface = device.interfaces?.[0];
+            if (iface) {
+                try {
+                    iface.release(true, err => {
+                        try {
+                            device.close();
+                        } catch(e){}
+                        resolve();
+                    });
+                } catch(e) {
+                    try {
+                        device.close();
+                    } catch(e){}
+                    resolve();
+                }
+            } else {
+                try {
+                    device.close();
+                } catch(e){}
+                resolve();
             }
-    
-            // 尝试关闭设备
-            try {
-            device.close();
-            } catch (err) {
-            console.warn('USB关闭异常', err.message);
-            }
-    
-            // 等待少量时间确保资源释放
-            setTimeout(resolve, 50);
-      } catch (err) {
-            console.error('USB设备检查错误', err);
+        } catch (err) {
+            console.error('USB设备关闭错误', err);
             resolve();
-      }
+        }
     });
 }
 
@@ -546,14 +558,14 @@ function setupSerialListeners(deviceType) {
     }
 
     serialDeviceState.serialPort.once('close', () => {
-        serialDeviceState.serialPort = null;
+        safeDisconnect()
         mainWindow.webContents.send('serial-disconnected');
     });
 
-    serialDeviceState.serialPort.once('error', err => {
-        serialDeviceState.serialPort = null;
-        mainWindow.webContents.send('serial-disconnected');
-    });
+    // serialDeviceState.serialPort.once('error', err => {
+    //     safeDisconnect();
+    //     mainWindow.webContents.send('serial-disconnected');
+    // });
 }
 
 // 切换解析器
@@ -841,7 +853,8 @@ let flashAbort = false;
 async function downloadCodeSerial(code) {//主函数代码，扩展列表
     try {
         if (!serialDeviceState.usbDevice) {
-          throw new Error("USB 设备未连接，无法烧录");
+          //throw new Error("USB 设备未连接，无法烧录");
+            throw { id: "001", error: "unconnected device", type: "toast"};
         }
 
         // flashAbort = false;
@@ -900,7 +913,23 @@ async function downloadCodeSerial(code) {//主函数代码，扩展列表
         return { success: true };
     } catch (err) {
         console.error("烧录失败:", err);
-        mainWindow.webContents.send("flash-error", err.message);
+        let errorResult;
+        if ( typeof err === 'object'  && !(err instanceof Error)){
+            errorResult = {
+                success: false,
+                id: err.id || "",
+                error: err.error || "unknown error",
+                type: err.type || "modal"
+            };
+        } else {
+            errorResult = {
+                success: false,
+                id: "",
+                error: err.message || err.error,
+                type: ""
+            };
+        }
+        mainWindow.webContents.send("flash-error", errorResult);
 
         // 出错后尝试断开连接
         if (serialDeviceState.daplink) {
@@ -909,8 +938,10 @@ async function downloadCodeSerial(code) {//主函数代码，扩展列表
         }
 
         return { 
-          success: false, 
-          error: err.message 
+            success: false, 
+            id: err.id || "",
+            error: err.message || err.error,
+            type: err.type || "" 
         };
     }finally {
         // isFlashing = false;
