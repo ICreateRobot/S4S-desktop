@@ -1,0 +1,5 @@
+cmake_minimum_required(VERSION 3.15)
+
+file(GLOB_RECURSE cc_srcs "src/src/*.c")
+
+add_library(cc ${cc_srcs})

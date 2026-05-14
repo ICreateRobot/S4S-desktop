@@ -865,68 +865,11 @@ class EditorWindow extends ProjectRunningWindow {
     // ############################################### Arduino相关 ###############################################
     //烧录Arduino代码
     this.ipc.handle('download-arduino-code', async (_, code) => {
-      // if (!serialDeviceState.serialPort) {
-      //   return { success: false, error: "未连接设备" };
-      // }
-      // console.log(serialDeviceState.serialPort.path)
-
-      try {
-        const sketchDir = path.join(os.tmpdir(), "mysketch");
-        if (!fs.existsSync(sketchDir)) fs.mkdirSync(sketchDir);
-
-        const sketchFile = path.join(sketchDir, "mysketch.ino");
-        fs.writeFileSync(sketchFile, code);
-
-        // 安装 R4 支持包（可放在初始化位置）
-        //await runCli(["core", "install", "arduino:renesas_uno"]);
-
-
-        // 编译 
-        await runCli([
-          'compile',
-          '--fqbn', 'arduino:renesas_uno:unor4wifi',
-          sketchDir
-        ]);
-
-        // 上传 
-        await runCli([
-          'upload',
-          '-p', "COM20",//serialDeviceState.serialPort.path,
-          '--fqbn', 'arduino:renesas_uno:unor4wifi',
-          sketchDir
-        ]);
-
-        return { success: true };
-
-      } catch (err) {
-        console.log("1111", err.message);
-        return { success: false, error: err.message };
-      }
+      return serialManager.downloadCodeSerial_Arduino(code);
+      
     });
 
-    // 调用cli
-    function runCli(args) {
-      const config = getResourcePath1('/Arduino/arduino-cli.yaml');
-      const cliPath = getResourcePath1('/Arduino/arduino-cli.exe');
-      return new Promise((resolve, reject) => {
-        console.log("RUN:", cliPath, args.join(" ")); // ⭐ 打印执行命令
-        const proc = spawn(cliPath, ["--config-file", config, ...args], { shell: true });
     
-        proc.stdout.on('data', d => {
-          console.log("[CLI stdout]:", d.toString());  // ⭐ 打印 stdout
-        });
-        proc.stderr.on('data', d => {
-          console.error("[CLI stderr]:", d.toString()); // ⭐ 打印 stderr
-        });
-    
-        proc.on('close', code => {
-          console.log("CLI exit code:", code);          // ⭐ 打印退出码
-    
-          if (code === 0) resolve();
-          else reject(new Error("CLI Error, exitCode=" + code));
-        });
-      });
-    }
 
     // ###########################################################################################################
 

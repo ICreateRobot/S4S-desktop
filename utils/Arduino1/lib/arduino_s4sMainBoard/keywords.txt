@@ -1,0 +1,41 @@
+#######################################
+# Syntax Coloring Map for S4S_MainBoard
+#######################################
+
+#######################################
+# Datatypes (KEYWORD1)
+#######################################
+
+s4s_mainBoard	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+charging_get_state	KEYWORD2
+ambient_light_set_state	KEYWORD2
+rtc_set_data	KEYWORD2
+rtc_set_time	KEYWORD2
+rtc_get_data	KEYWORD2
+rtc_get_time	KEYWORD2
+servo_set_angle	KEYWORD2
+gyro_enable	KEYWORD2
+gyro_set_state	KEYWORD2
+gyro_get_state	KEYWORD2
+gyro_get_acc	KEYWORD2
+gyro_get_gyro	KEYWORD2
+gyro_get_angle	KEYWORD2
+encoder_motor_set_mode	KEYWORD2
+encoder_motor_set_power	KEYWORD2
+encoder_motor_set_position	KEYWORD2
+encoder_motor_get_position	KEYWORD2
+encoder_motor_set_position_pid	KEYWORD2
+encoder_motor_set_velocity_pid	KEYWORD2
+writeReg	KEYWORD2
+readReg	KEYWORD2
+isOnline	KEYWORD2
+
+#######################################
+# Constants (LITERAL1)
+#######################################

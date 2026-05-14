@@ -1,0 +1,5 @@
+board_manager:
+    additional_urls: []
+directories:
+    user: ./arduino_user
+    data: ./arduino_data

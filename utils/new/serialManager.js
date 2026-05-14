@@ -5,10 +5,12 @@ const { SerialPort } = require('serialport');
 const { ReadlineParser } = require('@serialport/parser-readline');
 const usb = require('usb');
 const fs = require('fs');
+const os = require("os");
 const {MicropythonFsHex }  = require('@microbit/microbit-fs');
 const { microbitBoardId } = require('@microbit/microbit-universal-hex');
 const DAPjs = require('dapjs');
 const { DAPLink } = DAPjs;
+const { spawn} = require('child_process');
 
 
 // 连接串口设备状态管理
@@ -369,8 +371,8 @@ async function disconnectSerialDevice() {
     }
 }
 
-//辅助函数--安全断开
-async function safeDisconnect() {
+//辅助函数--安全断开（是否静默断开-不通知前端）
+async function safeDisconnect(silent = false) {
     try {
         // 保证不会重复断开
         if (serialDeviceState._disconnecting) {
@@ -409,7 +411,10 @@ async function safeDisconnect() {
         console.log(e)
     }finally {
         serialDeviceState._disconnecting = false;
-        mainWindow.webContents.send('serial-disconnected');//(连接时也会清理一次串口，但是都会发送一个断开，后续应该改为根据不同情况来发送)
+        //mainWindow.webContents.send('serial-disconnected');//(连接时也会清理一次串口，但是都会发送一个断开，后续应该改为根据不同情况来发送)
+        if (!silent) {
+            mainWindow.webContents.send('serial-disconnected');
+        }
     }
 }
 
@@ -883,7 +888,7 @@ async function downloadCodeSerial(code) {//主函数代码，扩展列表
         serialDeviceState.daplink.on(DAPLink.EVENT_PROGRESS, progress => {
           // if (flashAbort) return;
           const percent = Math.round(progress * 100);
-          mainWindow.webContents.send('flash-progress', percent);
+          mainWindow.webContents.send('flash-progress', {device: 'Microbit',stage: 'flashing',progress: percent});
         });
 
 
@@ -963,6 +968,7 @@ function getResourcePath(relativePath) {
       return path.join(__dirname, '../../utils', relativePath);
     }
 }
+
 
 // 递归检测项目中所有扩展文件（会将文件直接读取出来，不需要再次读取了）
 function detectExtensionFile(mainCode){
@@ -1079,11 +1085,271 @@ async function downloadCodeSerial_ESP(code) {
         }
 
     } catch (err) {
+
         
     }finally {
        
     }
 }
+
+//######################################## Arduino 下载程序 ########################################
+let isFlashing_arduino = false;//下载中
+let stage_arduino = "";//阶段
+
+const projectDir = getResourcePath('Arduino1');// 工程目录
+const inoFile = path.join(projectDir, 'Arduino1.ino');//主文件
+const libsRoot = getResourcePath('Arduino1/lib');// 自定义库
+const cliPath = getResourcePath('Arduino1/arduino-cli.exe');// arduino-cli.exe
+const configPath = getResourcePath('Arduino1/arduino-cli.yaml');// yaml
+
+async function downloadCodeSerial_Arduino(code) {
+    let oldPort = null;
+    try {
+        if(isFlashing_arduino) return;//防止重复下载
+
+        //判断是否有连接设备
+        if (!serialDeviceState.serialPort) {
+            throw { id: "001", error: "unconnected device", type: "toast"};
+        }
+        oldPort = serialDeviceState.serialPort.path;
+
+        mainWindow.webContents.send('flash-progress', {device: 'Arduino',stage: 'compile',progress: 0});
+
+        isFlashing_arduino = true;
+        stage_arduino = "compile";
+
+        // 写入代码
+        fs.writeFileSync(inoFile, code);
+        
+        // 构建标志
+        const buildFlags = '-I src -I include';
+
+        // 编译
+        const args = [
+            '--config-file',
+            configPath,
+            'compile',
+            '--fqbn','arduino:renesas_uno:unor4wifi',
+            '--build-property',`build.extra_flags=${buildFlags}`,
+            '--library', path.join(libsRoot, 'arduino_s4sMainBoard'),
+            '--library',path.join(libsRoot, 'arduino_k210'),
+            '--library',path.join(libsRoot, 'music_i2sPlayer'),
+            '--library',path.join(libsRoot, 'udcheck'),
+            '--library',path.join(libsRoot, 'zs_tools'),
+            projectDir
+        ];
+        await runCli(args, cliPath);
+        
+        //再次判断是否有连接设备
+        if (!serialDeviceState.serialPort) {
+            throw { id: "001", error: "unconnected device"};
+        }
+        //断开旧的连接
+        await safeDisconnect(true);//静默断开
+
+        stage_arduino = "upload";
+        // 上传 
+        await runCli([
+            '--config-file',
+            configPath,
+            'upload',
+            '--port', oldPort,
+            '--fqbn', 'arduino:renesas_uno:unor4wifi',
+            projectDir
+        ],cliPath);
+
+        return { success: true };
+    } catch (err) {
+        let errorResult;
+        if ( typeof err === 'object'  && !(err instanceof Error)){
+            errorResult = {
+                success: false,
+                id: err.id || "",
+                error: err.error || "unknown error",
+                type: err.type || "modal"
+            };
+        } else {
+            errorResult = {
+                success: false,
+                id: "",
+                error: err.message || err.error,
+                type: ""
+            };
+        }
+        mainWindow.webContents.send("flash-error", errorResult);
+    
+        return { success: false, error: err.message };
+    } finally{
+        if (oldPort) {
+            try {
+                await connSerialOnly({ comPort: oldPort },"Arduino" );
+            } catch (e) {
+                console.error( '重新连接失败:', e);
+            }
+        }
+        isFlashing_arduino = false;
+    }
+}
+// 运行cli
+function runCli(args, cliPath) {
+    return new Promise((resolve, reject) => {
+        const cli = spawn(cliPath, args, {
+            windowsHide: true,
+            cwd: path.dirname(cliPath)
+        });
+
+        cli.stdout.on('data', data => {
+            const text = data.toString();
+            const result = parseCliLine(text);//处理数据
+            //console.log(result)
+            mainWindow.webContents.send('flash-progress', result);
+        });
+
+        // cli.stderr.on('data', data => {
+        //     console.log(111)
+        //     console.error(parseProgress(data.toString()));
+        // });
+
+        // cli.on('spawn', () => {
+        //     console.log("CLI START");
+        // });
+
+        cli.on('close', code => {
+            // console.log("exit:", code);
+            if (code === 0) {
+                resolve();
+                if(stage_arduino == "upload"){
+                    mainWindow.webContents.send("flash-done");
+                }
+            } else {
+                reject(new Error(`CLI Error, exitCode= ${code}`));
+            }
+        });
+    });
+}
+// 进度处理
+function parseCliLine(text) {
+    const result = {
+        device: 'Arduino',
+        stage: 'compile',//阶段
+        progress: null,//进度
+        message: "",//消息
+    };
+
+    // 编译完成
+    if ( text.includes('Sketch uses') || text.includes('Global variables use') ) {
+        result.stage = 'compile';
+        result.message = text;
+    }else if ( text.includes('Write ') || text.includes('Erase flash') ) {// 刚刚进入烧录阶段
+        result.stage = 'flashing';
+        result.progress = 0;
+        //result.message = text;
+    }else if ( text.includes('Done in') || text.includes('New upload port') ) { // 成功
+        result.stage = 'flashing';
+        result.progress = 100;
+        //result.message = text;
+    }else{// 提取进度
+        const percentMatch = text.match(/(\d+)%/);
+        if (percentMatch) {
+            result.stage = 'flashing';
+            result.progress = parseInt(percentMatch[1]);
+        }
+    }
+
+    return result;
+    
+    // console.log("0000:", aaaa);
+    // console.log(text);
+    // aaaa+=1
+    // const percentMatch = text.match(/(\d+)%/);
+    // if (percentMatch) {
+    //     const percent =  parseInt(percentMatch[1]);
+    //     return percent;
+    // }
+    // return 0;
+}
+
+//暂时不用的方案，舍不得删（创建临时文件且安装包）
+// async function downloadCodeSerial_Arduino1(code) {
+//     try {
+//         const sketchDir = path.join(os.tmpdir(), "mysketch");
+//         if (!fs.existsSync(sketchDir)) fs.mkdirSync(sketchDir);
+
+//         const sketchFile = path.join(sketchDir, "mysketch.ino");
+//         fs.writeFileSync(sketchFile, code);
+
+//         // 安装 R4 支持包（可放在初始化位置）
+//         //await runCli(["core", "install", "arduino:renesas_uno"]);
+//         const libsPath = getResourcePath('/Arduino1/libraries');//自定义库路径
+
+//         //编译 
+//         await runCli([
+//             'compile',
+//             '--fqbn', 'arduino:renesas_uno:unor4wifi',
+//             '--libraries', libsPath,
+//             sketchDir
+//         ]);
+
+
+//         // 上传 
+//         await runCli([
+//             'upload',
+//             '-p', "COM20",//serialDeviceState.serialPort.path,
+//             '--fqbn', 'arduino:renesas_uno:unor4wifi',
+//             sketchDir
+//         ]);
+
+//         return { success: true };
+
+//     } catch (err) {
+//         let errorResult;
+//         if ( typeof err === 'object'  && !(err instanceof Error)){
+//             errorResult = {
+//                 success: false,
+//                 id: err.id || "",
+//                 error: err.error || "unknown error",
+//                 type: err.type || "modal"
+//             };
+//         } else {
+//             errorResult = {
+//                 success: false,
+//                 id: "",
+//                 error: err.message || err.error,
+//                 type: ""
+//             };
+//         }
+//         mainWindow.webContents.send("flash-error", errorResult);
+
+//         console.log("9999", err.message);
+//         return { success: false, error: err.message };
+//     } finally{
+//         isFlashing_arduino = false;
+//     }
+// }
+
+// // 调用cli
+// function runCli(args) {
+//     const config = getResourcePath('/Arduino1/arduino-cli.yaml');
+//     const cliPath = getResourcePath('/Arduino1/arduino-cli.exe');
+//     return new Promise((resolve, reject) => {
+//         console.log("RUN:", cliPath, args.join(" ")); // ⭐ 打印执行命令
+//         const proc = spawn(cliPath, ["--config-file", config, ...args], { shell: true });
+
+//         proc.stdout.on('data', d => {//编译
+//             console.log("[CLI stdout]:", d.toString());  // ⭐ 打印 stdout
+//         });
+//         proc.stderr.on('data', d => {
+//             console.error("[CLI stderr]:", d.toString()); // ⭐ 打印 stderr
+//         });
+
+//         proc.on('close', code => {
+//             console.log("CLI exit code:", code);          // ⭐ 打印退出码
+
+//             if (code === 0) resolve();
+//             else reject(new Error("CLI Error, exitCode=" + code));
+//         });
+//     });
+// }
 
 //######################################## 统一固件烧录接口 ########################################
 // 分发
@@ -1174,123 +1440,123 @@ async function connectAndFlash(firmwareName,port, code) {
 
 // 临时连接新设备烧录 (未使用，ai写的未验证)
 // 临时状态管理（独立于现有状态）
-let tempFlashState = {
-    usbDevice: null,
-    daplink: null,
-    serialPort: null,
-    abortTimer: null,
-    shouldAbort: false,
-    isFlashing: false
-};
-async function tempConnectAndFlash(port, code) {
-    // 保存当前状态
-    const originalState = {
-        usbDevice: serialDeviceState.usbDevice,
-        serialPort: serialDeviceState.serialPort,
-        daplink: serialDeviceState.daplink
-    };
+// let tempFlashState = {
+//     usbDevice: null,
+//     daplink: null,
+//     serialPort: null,
+//     abortTimer: null,
+//     shouldAbort: false,
+//     isFlashing: false
+// };
+// async function tempConnectAndFlash(port, code) {
+//     // 保存当前状态
+//     const originalState = {
+//         usbDevice: serialDeviceState.usbDevice,
+//         serialPort: serialDeviceState.serialPort,
+//         daplink: serialDeviceState.daplink
+//     };
 
-    try {
-        // 1. 清理当前连接（不销毁，只是临时断开）
-        if (serialDeviceState.daplink) {
-            try { await serialDeviceState.daplink.disconnect(); } catch (e) {}
-            serialDeviceState.daplink = null;
-        }
-        if (serialDeviceState.serialPort && serialDeviceState.serialPort.isOpen) {
-            try { await serialDeviceState.serialPort.close(); } catch (e) {}
-        }
-        if (serialDeviceState.usbDevice && serialDeviceState.usbDevice.opened) {
-            // 注意：这里不关闭USB设备，避免彻底断开
-            // 只是释放接口
-            try {
-                if (serialDeviceState.usbDevice.interfaces?.length > 0) {
-                    await serialDeviceState.usbDevice.interfaces[0].release();
-                }
-            } catch (e) {}
-        }
+//     try {
+//         // 1. 清理当前连接（不销毁，只是临时断开）
+//         if (serialDeviceState.daplink) {
+//             try { await serialDeviceState.daplink.disconnect(); } catch (e) {}
+//             serialDeviceState.daplink = null;
+//         }
+//         if (serialDeviceState.serialPort && serialDeviceState.serialPort.isOpen) {
+//             try { await serialDeviceState.serialPort.close(); } catch (e) {}
+//         }
+//         if (serialDeviceState.usbDevice && serialDeviceState.usbDevice.opened) {
+//             // 注意：这里不关闭USB设备，避免彻底断开
+//             // 只是释放接口
+//             try {
+//                 if (serialDeviceState.usbDevice.interfaces?.length > 0) {
+//                     await serialDeviceState.usbDevice.interfaces[0].release();
+//                 }
+//             } catch (e) {}
+//         }
 
-        // 2. 连接新设备
-        const device = usb.getDevices().find(d =>
-            d.deviceDescriptor.idVendor === 0x0D28 &&
-            d.deviceDescriptor.idProduct === 0x0204 &&
-            d.deviceDescriptor.iSerialNumber === port // 通过端口匹配
-        );
+//         // 2. 连接新设备
+//         const device = usb.getDevices().find(d =>
+//             d.deviceDescriptor.idVendor === 0x0D28 &&
+//             d.deviceDescriptor.idProduct === 0x0204 &&
+//             d.deviceDescriptor.iSerialNumber === port // 通过端口匹配
+//         );
 
-        if (!device) throw new Error(`未找到设备: ${port}`);
+//         if (!device) throw new Error(`未找到设备: ${port}`);
 
-        await device.open();
-        if (device.interfaces?.length > 0) {
-            await device.interfaces[0].claim();
-        }
+//         await device.open();
+//         if (device.interfaces?.length > 0) {
+//             await device.interfaces[0].claim();
+//         }
 
-        const serialPort = new SerialPort({ path: port, baudRate: 115200, autoOpen: false });
-        await new Promise((resolve, reject) => {
-            serialPort.open(err => err ? reject(err) : resolve());
-        });
+//         const serialPort = new SerialPort({ path: port, baudRate: 115200, autoOpen: false });
+//         await new Promise((resolve, reject) => {
+//             serialPort.open(err => err ? reject(err) : resolve());
+//         });
 
-        // 3. 烧录（使用临时状态）
-        tempFlashState.usbDevice = device;
-        tempFlashState.serialPort = serialPort;
+//         // 3. 烧录（使用临时状态）
+//         tempFlashState.usbDevice = device;
+//         tempFlashState.serialPort = serialPort;
 
-        const hexPath = await generateV2Hex(code);
-        const hexData = fs.readFileSync(hexPath);
+//         const hexPath = await generateV2Hex(code);
+//         const hexData = fs.readFileSync(hexPath);
 
-        const transport = new DAPjs.USB(device);
-        tempFlashState.daplink = new DAPLink(transport);
+//         const transport = new DAPjs.USB(device);
+//         tempFlashState.daplink = new DAPLink(transport);
 
-        await tempFlashState.daplink.connect();
-        tempFlashState.daplink.on(DAPLink.EVENT_PROGRESS, progress => {
-            const percent = Math.round(progress * 100);
-            mainWindow.webContents.send('flash-progress', percent);
-        });
+//         await tempFlashState.daplink.connect();
+//         tempFlashState.daplink.on(DAPLink.EVENT_PROGRESS, progress => {
+//             const percent = Math.round(progress * 100);
+//             mainWindow.webContents.send('flash-progress', percent);
+//         });
 
-        await tempFlashState.daplink.flash(hexData);
+//         await tempFlashState.daplink.flash(hexData);
 
-        // 4. 烧录完成，断开新设备
-        await tempFlashState.daplink.disconnect();
-        await serialPort.close();
-        await device.close();
+//         // 4. 烧录完成，断开新设备
+//         await tempFlashState.daplink.disconnect();
+//         await serialPort.close();
+//         await device.close();
 
-        // 5. 恢复原始连接
-        if (originalState.usbDevice && originalState.serialPort) {
-            try {
-                await originalState.usbDevice.open();
-                if (originalState.usbDevice.interfaces?.length > 0) {
-                    await originalState.usbDevice.interfaces[0].claim();
-                }
-                await originalState.serialPort.open();
+//         // 5. 恢复原始连接
+//         if (originalState.usbDevice && originalState.serialPort) {
+//             try {
+//                 await originalState.usbDevice.open();
+//                 if (originalState.usbDevice.interfaces?.length > 0) {
+//                     await originalState.usbDevice.interfaces[0].claim();
+//                 }
+//                 await originalState.serialPort.open();
 
-                // 恢复到主状态
-                serialDeviceState.usbDevice = originalState.usbDevice;
-                serialDeviceState.serialPort = originalState.serialPort;
-                setupSerialListeners('Microbit');
-            } catch (e) {
-                console.warn('恢复原始连接失败:', e.message);
-            }
-        }
+//                 // 恢复到主状态
+//                 serialDeviceState.usbDevice = originalState.usbDevice;
+//                 serialDeviceState.serialPort = originalState.serialPort;
+//                 setupSerialListeners('Microbit');
+//             } catch (e) {
+//                 console.warn('恢复原始连接失败:', e.message);
+//             }
+//         }
 
-        mainWindow.webContents.send('flash-done');
-        return { success: true, tempConnection: true };
+//         mainWindow.webContents.send('flash-done');
+//         return { success: true, tempConnection: true };
 
-    } catch (error) {
-        // 出错尝试恢复原始连接
-        if (originalState.usbDevice && originalState.serialPort) {
-            try {
-                await originalState.usbDevice.open();
-                if (originalState.usbDevice.interfaces?.length > 0) {
-                    await originalState.usbDevice.interfaces[0].claim();
-                }
-                await originalState.serialPort.open();
-                serialDeviceState.usbDevice = originalState.usbDevice;
-                serialDeviceState.serialPort = originalState.serialPort;
-                setupSerialListeners('Microbit');
-            } catch (e) {
-                console.warn('恢复原始连接失败:', e.message);
-            }
-        }
-        throw error;
-    }
-}
+//     } catch (error) {
+//         // 出错尝试恢复原始连接
+//         if (originalState.usbDevice && originalState.serialPort) {
+//             try {
+//                 await originalState.usbDevice.open();
+//                 if (originalState.usbDevice.interfaces?.length > 0) {
+//                     await originalState.usbDevice.interfaces[0].claim();
+//                 }
+//                 await originalState.serialPort.open();
+//                 serialDeviceState.usbDevice = originalState.usbDevice;
+//                 serialDeviceState.serialPort = originalState.serialPort;
+//                 setupSerialListeners('Microbit');
+//             } catch (e) {
+//                 console.warn('恢复原始连接失败:', e.message);
+//             }
+//         }
+//         throw error;
+//     }
+// }
 
 // 延时函数
 function delay(ms) {
@@ -1339,6 +1605,7 @@ module.exports = {
     sendCommandSerial_D,
     downloadCodeSerial,
     downloadCodeSerial_ESP,
+    downloadCodeSerial_Arduino,
     cancelDownloadCodeSerial,
     unifiedFlashFirmware,
     mB_runCodeSerial
