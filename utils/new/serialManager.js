@@ -381,6 +381,8 @@ async function safeDisconnect(silent = false) {
         }
         serialDeviceState._disconnecting = true;
 
+        clearCurrentCommand();//清理数据阻塞
+
         const stateCopy = { ...serialDeviceState };
         serialDeviceState.serialPort = null;
         serialDeviceState.usbDevice = null;
@@ -757,6 +759,13 @@ async function runSerialCommand(command, type){
       return { success: true, response: output };
     } catch (err) {
       return { success: false, id: "", error: err.message };
+    }
+}
+//清理数据阻塞
+function clearCurrentCommand(result = null) {
+    if (serialDeviceState.currentResolve) {
+        serialDeviceState.currentResolve(result);
+        serialDeviceState.currentResolve = null;
     }
 }
 
