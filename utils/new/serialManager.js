@@ -1122,6 +1122,9 @@ async function downloadCodeSerial_Arduino(code) {
         }
         oldPort = serialDeviceState.serialPort.path;
 
+        //断开旧的连接
+        await safeDisconnect(true);//静默断开
+
         mainWindow.webContents.send('flash-progress', {device: 'Arduino',stage: 'compile',progress: 0});
 
         isFlashing_arduino = true;
@@ -1148,13 +1151,8 @@ async function downloadCodeSerial_Arduino(code) {
             projectDir
         ];
         await runCli(args, cliPath);
-        
-        //再次判断是否有连接设备
-        if (!serialDeviceState.serialPort) {
-            throw { id: "001", error: "unconnected device"};
-        }
-        //断开旧的连接
-        await safeDisconnect(true);//静默断开
+
+        console.log("upload start");
 
         stage_arduino = "upload";
         // 上传 
@@ -1188,16 +1186,42 @@ async function downloadCodeSerial_Arduino(code) {
         mainWindow.webContents.send("flash-error", errorResult);
     
         return { success: false, error: err.message };
-    } finally{
+    } finally {
         if (oldPort) {
             try {
-                await connSerialOnly({ comPort: oldPort },"Arduino" );
+                // 🔥 关键：等待系统释放 COM
+                await delay(800);
+
+                // 🔥 再重试连接（最多2次）
+                let retry = 2;
+
+                while (retry-- > 0) {
+                    try {
+                        await connSerialOnly({ comPort: oldPort }, "Arduino");
+                        break;
+                    } catch (e) {
+                        console.error('重连失败，重试中...', e);
+                        await delay(500);
+                    }
+                }
+
             } catch (e) {
-                console.error( '重新连接失败:', e);
+                console.error('最终重连失败:', e);
             }
         }
+
         isFlashing_arduino = false;
     }
+    // finally{
+    //     if (oldPort) {
+    //         try {
+    //             await connSerialOnly({ comPort: oldPort },"Arduino" );
+    //         } catch (e) {
+    //             console.error( '重新连接失败:', e);
+    //         }
+    //     }
+    //     isFlashing_arduino = false;
+    // }
 }
 // 运行cli
 function runCli(args, cliPath) {
@@ -1214,10 +1238,10 @@ function runCli(args, cliPath) {
             mainWindow.webContents.send('flash-progress', result);
         });
 
-        // cli.stderr.on('data', data => {
-        //     console.log(111)
-        //     console.error(parseProgress(data.toString()));
-        // });
+        cli.stderr.on('data', data => {
+            console.log(111)
+            console.error(data.toString());
+        });
 
         // cli.on('spawn', () => {
         //     console.log("CLI START");
@@ -1266,16 +1290,6 @@ function parseCliLine(text) {
     }
 
     return result;
-    
-    // console.log("0000:", aaaa);
-    // console.log(text);
-    // aaaa+=1
-    // const percentMatch = text.match(/(\d+)%/);
-    // if (percentMatch) {
-    //     const percent =  parseInt(percentMatch[1]);
-    //     return percent;
-    // }
-    // return 0;
 }
 
 //暂时不用的方案，舍不得删（创建临时文件且安装包）
