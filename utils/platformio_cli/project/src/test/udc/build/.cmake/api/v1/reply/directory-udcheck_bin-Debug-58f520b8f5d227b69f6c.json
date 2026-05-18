@@ -1,0 +1,14 @@
+{
+	"backtraceGraph" : 
+	{
+		"commands" : [],
+		"files" : [],
+		"nodes" : []
+	},
+	"installers" : [],
+	"paths" : 
+	{
+		"build" : "udcheck_bin",
+		"source" : "D:/Desktop/s4s/s4s_hat_arduino_Interaction/src/lib/udcheck"
+	}
+}

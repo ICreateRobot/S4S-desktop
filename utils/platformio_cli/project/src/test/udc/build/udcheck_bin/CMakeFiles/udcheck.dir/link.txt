@@ -1,0 +1,2 @@
+D:\msys64\mingw64\bin\ar.exe qc libudcheck.a CMakeFiles/udcheck.dir/src/core/udc_core.c.obj CMakeFiles/udcheck.dir/src/core/udc_event.c.obj CMakeFiles/udcheck.dir/src/hal/udc_hal_tick.c.obj CMakeFiles/udcheck.dir/src/misc/udc_mem.c.obj
+D:\msys64\mingw64\bin\ranlib.exe libudcheck.a

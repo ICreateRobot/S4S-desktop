@@ -1,0 +1,130 @@
+{
+	"archive" : {},
+	"artifacts" : 
+	[
+		{
+			"path" : "udcheck_bin/libudcheck.a"
+		}
+	],
+	"backtrace" : 1,
+	"backtraceGraph" : 
+	{
+		"commands" : 
+		[
+			"add_library",
+			"include_directories",
+			"target_include_directories"
+		],
+		"files" : 
+		[
+			"D:/Desktop/s4s/s4s_hat_arduino_Interaction/src/lib/udcheck/CMakeLists.txt",
+			"CMakeLists.txt"
+		],
+		"nodes" : 
+		[
+			{
+				"file" : 0
+			},
+			{
+				"command" : 0,
+				"file" : 0,
+				"line" : 5,
+				"parent" : 0
+			},
+			{
+				"file" : 1
+			},
+			{
+				"command" : 1,
+				"file" : 1,
+				"line" : 4,
+				"parent" : 2
+			},
+			{
+				"command" : 2,
+				"file" : 0,
+				"line" : 6,
+				"parent" : 0
+			}
+		]
+	},
+	"compileGroups" : 
+	[
+		{
+			"compileCommandFragments" : 
+			[
+				{
+					"fragment" : "-g"
+				}
+			],
+			"includes" : 
+			[
+				{
+					"backtrace" : 3,
+					"path" : "D:/Desktop/s4s/s4s_hat_arduino_Interaction/src/test/udc"
+				},
+				{
+					"backtrace" : 4,
+					"path" : "D:/Desktop/s4s/s4s_hat_arduino_Interaction/src/lib/udcheck"
+				}
+			],
+			"language" : "C",
+			"sourceIndexes" : 
+			[
+				0,
+				1,
+				2,
+				3
+			]
+		}
+	],
+	"id" : "udcheck::@03ec265e4eba45ed4e28",
+	"name" : "udcheck",
+	"nameOnDisk" : "libudcheck.a",
+	"paths" : 
+	{
+		"build" : "udcheck_bin",
+		"source" : "D:/Desktop/s4s/s4s_hat_arduino_Interaction/src/lib/udcheck"
+	},
+	"sourceGroups" : 
+	[
+		{
+			"name" : "Source Files",
+			"sourceIndexes" : 
+			[
+				0,
+				1,
+				2,
+				3
+			]
+		}
+	],
+	"sources" : 
+	[
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "D:/Desktop/s4s/s4s_hat_arduino_Interaction/src/lib/udcheck/src/core/udc_core.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "D:/Desktop/s4s/s4s_hat_arduino_Interaction/src/lib/udcheck/src/core/udc_event.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "D:/Desktop/s4s/s4s_hat_arduino_Interaction/src/lib/udcheck/src/hal/udc_hal_tick.c",
+			"sourceGroupIndex" : 0
+		},
+		{
+			"backtrace" : 1,
+			"compileGroupIndex" : 0,
+			"path" : "D:/Desktop/s4s/s4s_hat_arduino_Interaction/src/lib/udcheck/src/misc/udc_mem.c",
+			"sourceGroupIndex" : 0
+		}
+	],
+	"type" : "STATIC_LIBRARY"
+}

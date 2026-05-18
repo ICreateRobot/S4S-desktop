@@ -1,0 +1,6 @@
+D:/Desktop/s4s/s4s_hat_arduino_Interaction/src/test/udc/build/CMakeFiles/main.dir
+D:/Desktop/s4s/s4s_hat_arduino_Interaction/src/test/udc/build/CMakeFiles/edit_cache.dir
+D:/Desktop/s4s/s4s_hat_arduino_Interaction/src/test/udc/build/CMakeFiles/rebuild_cache.dir
+D:/Desktop/s4s/s4s_hat_arduino_Interaction/src/test/udc/build/udcheck_bin/CMakeFiles/udcheck.dir
+D:/Desktop/s4s/s4s_hat_arduino_Interaction/src/test/udc/build/udcheck_bin/CMakeFiles/edit_cache.dir
+D:/Desktop/s4s/s4s_hat_arduino_Interaction/src/test/udc/build/udcheck_bin/CMakeFiles/rebuild_cache.dir

@@ -1,0 +1,15 @@
+[submodule "src/lib/udcheck"]
+	path = src/lib/udcheck
+	url = git@github.com:cyc36880/udcheck.git
+[submodule "src/lib/zs_tools"]
+	path = src/lib/zs_tools
+	url = git@github.com:cyc36880/zs_tools.git
+[submodule "src/lib/music_i2sPlayer"]
+	path = src/lib/music_i2sPlayer
+	url = git@github.com:Starrynight252/Music_I2SPlayer.git
+[submodule "src/lib/arduino_s4sMainBoard"]
+	path = src/lib/arduino_s4sMainBoard
+	url = git@github.com:cyc36880/Arduino_s4sMainBoard.git
+[submodule "src/lib/arduino_k210"]
+	path = src/lib/arduino_k210
+	url = git@github.com:cyc36880/Arduino_k210.git

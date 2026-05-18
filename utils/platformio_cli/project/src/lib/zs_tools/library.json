@@ -1,0 +1,9 @@
+{
+  "name": "zs_tools",
+  "build": {
+    "srcFilter": [
+      "+<**/*.c>",
+      "-<component/cc/example/*.c>"
+    ]
+  }
+}

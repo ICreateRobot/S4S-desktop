@@ -1,0 +1,32 @@
+[
+{
+  "directory": "D:/Desktop/s4s/s4s_hat_arduino_Interaction/src/test/udc/build",
+  "command": "D:\\msys64\\mingw64\\bin\\gcc.exe  @CMakeFiles/main.dir/includes_C.rsp -g -o CMakeFiles\\main.dir\\main.c.obj -c D:\\Desktop\\s4s\\s4s_hat_arduino_Interaction\\src\\test\\udc\\main.c",
+  "file": "D:/Desktop/s4s/s4s_hat_arduino_Interaction/src/test/udc/main.c",
+  "output": "CMakeFiles/main.dir/main.c.obj"
+},
+{
+  "directory": "D:/Desktop/s4s/s4s_hat_arduino_Interaction/src/test/udc/build/udcheck_bin",
+  "command": "D:\\msys64\\mingw64\\bin\\gcc.exe  @CMakeFiles/udcheck.dir/includes_C.rsp -g -o CMakeFiles\\udcheck.dir\\src\\core\\udc_core.c.obj -c D:\\Desktop\\s4s\\s4s_hat_arduino_Interaction\\src\\lib\\udcheck\\src\\core\\udc_core.c",
+  "file": "D:/Desktop/s4s/s4s_hat_arduino_Interaction/src/lib/udcheck/src/core/udc_core.c",
+  "output": "udcheck_bin/CMakeFiles/udcheck.dir/src/core/udc_core.c.obj"
+},
+{
+  "directory": "D:/Desktop/s4s/s4s_hat_arduino_Interaction/src/test/udc/build/udcheck_bin",
+  "command": "D:\\msys64\\mingw64\\bin\\gcc.exe  @CMakeFiles/udcheck.dir/includes_C.rsp -g -o CMakeFiles\\udcheck.dir\\src\\core\\udc_event.c.obj -c D:\\Desktop\\s4s\\s4s_hat_arduino_Interaction\\src\\lib\\udcheck\\src\\core\\udc_event.c",
+  "file": "D:/Desktop/s4s/s4s_hat_arduino_Interaction/src/lib/udcheck/src/core/udc_event.c",
+  "output": "udcheck_bin/CMakeFiles/udcheck.dir/src/core/udc_event.c.obj"
+},
+{
+  "directory": "D:/Desktop/s4s/s4s_hat_arduino_Interaction/src/test/udc/build/udcheck_bin",
+  "command": "D:\\msys64\\mingw64\\bin\\gcc.exe  @CMakeFiles/udcheck.dir/includes_C.rsp -g -o CMakeFiles\\udcheck.dir\\src\\hal\\udc_hal_tick.c.obj -c D:\\Desktop\\s4s\\s4s_hat_arduino_Interaction\\src\\lib\\udcheck\\src\\hal\\udc_hal_tick.c",
+  "file": "D:/Desktop/s4s/s4s_hat_arduino_Interaction/src/lib/udcheck/src/hal/udc_hal_tick.c",
+  "output": "udcheck_bin/CMakeFiles/udcheck.dir/src/hal/udc_hal_tick.c.obj"
+},
+{
+  "directory": "D:/Desktop/s4s/s4s_hat_arduino_Interaction/src/test/udc/build/udcheck_bin",
+  "command": "D:\\msys64\\mingw64\\bin\\gcc.exe  @CMakeFiles/udcheck.dir/includes_C.rsp -g -o CMakeFiles\\udcheck.dir\\src\\misc\\udc_mem.c.obj -c D:\\Desktop\\s4s\\s4s_hat_arduino_Interaction\\src\\lib\\udcheck\\src\\misc\\udc_mem.c",
+  "file": "D:/Desktop/s4s/s4s_hat_arduino_Interaction/src/lib/udcheck/src/misc/udc_mem.c",
+  "output": "udcheck_bin/CMakeFiles/udcheck.dir/src/misc/udc_mem.c.obj"
+}
+]
