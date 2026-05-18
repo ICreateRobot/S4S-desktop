@@ -1105,11 +1105,17 @@ async function downloadCodeSerial_ESP(code) {
 let isFlashing_arduino = false;//下载中
 let stage_arduino = "";//阶段
 
-const projectDir = getResourcePath('Arduino1');// 工程目录
-const inoFile = path.join(projectDir, 'Arduino1.ino');//主文件
-const libsRoot = getResourcePath('Arduino1/lib');// 自定义库
-const cliPath = getResourcePath('Arduino1/arduino-cli.exe');// arduino-cli.exe
-const configPath = getResourcePath('Arduino1/arduino-cli.yaml');// yaml
+// const projectDir = getResourcePath('platformio_cli');// 工程目录
+// const inoFile = path.join(projectDir, 'Arduino1.ino');//主文件
+// const libsRoot = getResourcePath('Arduino1/lib');// 自定义库
+// const cliPath = getResourcePath('Arduino1/arduino-cli.exe');// arduino-cli.exe
+// const configPath = getResourcePath('Arduino1/arduino-cli.yaml');// yaml
+
+const rootDir_Arduino = getResourcePath('platformio_cli');// PlatformIO 根目录
+const compileBat = path.join(rootDir_Arduino, 'pio_build.bat');//烧录入口
+const uploadBat = path.join(rootDir_Arduino, 'pio_upload.bat');//上传入口
+const projectDir_Arduino = path.join(rootDir_Arduino, 'project', 'src');//工程目录
+const codeFile_Arduino = path.join(projectDir_Arduino, 'src', 'main.cpp');//主文件
 
 async function downloadCodeSerial_Arduino(code) {
     let oldPort = null;
@@ -1126,46 +1132,60 @@ async function downloadCodeSerial_Arduino(code) {
         await safeDisconnect(true);//静默断开
 
         mainWindow.webContents.send('flash-progress', {device: 'Arduino',stage: 'compile',progress: 0});
-
         isFlashing_arduino = true;
-        stage_arduino = "compile";
 
         // 写入代码
-        fs.writeFileSync(inoFile, code);
-        
-        // 构建标志
-        const buildFlags = '-I src -I include';
+        fs.writeFileSync(codeFile_Arduino, code);
 
         // 编译
-        const args = [
-            '--config-file',
-            configPath,
-            'compile',
-            '--fqbn','arduino:renesas_uno:unor4wifi',
-            '--build-property',`build.extra_flags=${buildFlags}`,
-            '--library', path.join(libsRoot, 'arduino_s4sMainBoard'),
-            '--library',path.join(libsRoot, 'arduino_k210'),
-            '--library',path.join(libsRoot, 'music_i2sPlayer'),
-            '--library',path.join(libsRoot, 'udcheck'),
-            '--library',path.join(libsRoot, 'zs_tools'),
-            projectDir
-        ];
-        await runCli(args, cliPath);
+        stage_arduino = "compile";
+        err_compile_arduino = "";
+        await runPioCompile();
 
-        console.log("upload start");
+        //console.log('compile success');
 
-        stage_arduino = "upload";
         // 上传 
-        await runCli([
-            '--config-file',
-            configPath,
-            'upload',
-            '--port', oldPort,
-            '--fqbn', 'arduino:renesas_uno:unor4wifi',
-            projectDir
-        ],cliPath);
+        stage_arduino = "upload";
+        err_upload_arduino = "";
+        await runPioUpload(oldPort);
+
+        //console.log('PIO upload success');
 
         return { success: true };
+        
+        // 构建标志
+        // const buildFlags = '-I src -I include';
+
+        // // 编译
+        // const args = [
+        //     '--config-file',
+        //     configPath,
+        //     'compile',
+        //     '--fqbn','arduino:renesas_uno:unor4wifi',
+        //     '--build-property',`build.extra_flags=${buildFlags}`,
+        //     '--library', path.join(libsRoot, 'arduino_s4sMainBoard'),
+        //     '--library',path.join(libsRoot, 'arduino_k210'),
+        //     '--library',path.join(libsRoot, 'music_i2sPlayer'),
+        //     '--library',path.join(libsRoot, 'udcheck'),
+        //     '--library',path.join(libsRoot, 'zs_tools'),
+        //     projectDir
+        // ];
+        // await runCli(args, cliPath);
+
+        // console.log("upload start");
+
+        // stage_arduino = "upload";
+        // // 上传 
+        // await runCli([
+        //     '--config-file',
+        //     configPath,
+        //     'upload',
+        //     '--port', oldPort,
+        //     '--fqbn', 'arduino:renesas_uno:unor4wifi',
+        //     projectDir
+        // ],cliPath);
+
+        // return { success: true };
     } catch (err) {
         let errorResult;
         if ( typeof err === 'object'  && !(err instanceof Error)){
@@ -1189,12 +1209,10 @@ async function downloadCodeSerial_Arduino(code) {
     } finally {
         if (oldPort) {
             try {
-                // 🔥 关键：等待系统释放 COM
-                await delay(800);
+                await delay(800);// 等待系统释放 COM
 
-                // 🔥 再重试连接（最多2次）
+                //再重试连接
                 let retry = 2;
-
                 while (retry-- > 0) {
                     try {
                         await connSerialOnly({ comPort: oldPort }, "Arduino");
@@ -1212,85 +1230,186 @@ async function downloadCodeSerial_Arduino(code) {
 
         isFlashing_arduino = false;
     }
-    // finally{
-    //     if (oldPort) {
-    //         try {
-    //             await connSerialOnly({ comPort: oldPort },"Arduino" );
-    //         } catch (e) {
-    //             console.error( '重新连接失败:', e);
-    //         }
-    //     }
-    //     isFlashing_arduino = false;
-    // }
 }
-// 运行cli
-function runCli(args, cliPath) {
+
+// 编译 
+function runPioCompile() {
+    return runBatProcess({
+        batPath: compileBat,
+        stage: 'compile'
+    });
+}
+
+//上传
+function runPioUpload(port) {
+    const extraArgs = [];
+
+    // 固定串口
+    if (port) {
+        extraArgs.push(port);
+    }
+
+    return runBatProcess({
+        batPath: uploadBat,
+        stage: 'upload',
+        extraArgs
+    });
+}
+
+let err_upload_arduino = "";//上传错误
+let err_compile_arduino = "";//编译错误
+//通用 bat 执行
+function runBatProcess({ batPath, stage, extraArgs = []}) {
     return new Promise((resolve, reject) => {
-        const cli = spawn(cliPath, args, {
-            windowsHide: true,
-            cwd: path.dirname(cliPath)
+        const args = ['/c', batPath,...extraArgs];
+
+        const cli = spawn('cmd.exe', args, {
+            cwd: path.dirname(batPath),
+            windowsHide: true
         });
 
+        // stdout
         cli.stdout.on('data', data => {
             const text = data.toString();
-            const result = parseCliLine(text);//处理数据
-            //console.log(result)
+            // console.log("stdout");
+            // console.log(text);
+            
+            const result = parseCliLine(text,stage);
             mainWindow.webContents.send('flash-progress', result);
         });
 
+        // stderr
         cli.stderr.on('data', data => {
-            console.log(111)
-            console.error(data.toString());
+            const text = data.toString();
+            // console.log("stderr");
+            // console.error(text);
+            if(stage === "compile"){
+                //err_compile_arduino = text;
+            }else{
+                if(text.includes("could not open")){
+                    err_upload_arduino = text;
+                }
+            }
         });
 
-        // cli.on('spawn', () => {
-        //     console.log("CLI START");
-        // });
-
+        // close
         cli.on('close', code => {
-            // console.log("exit:", code);
+           // console.log(`${stage} exit:`, code);
             if (code === 0) {
                 resolve();
                 if(stage_arduino == "upload"){
                     mainWindow.webContents.send("flash-done");
                 }
             } else {
-                reject(new Error(`CLI Error, exitCode= ${code}`));
+                if (stage === "upload") {
+                    reject( new Error(  `${stage} failed: ${code}\n${err_upload_arduino}` ) );
+                } else {
+                    reject( new Error(  `${stage} failed: ${code}\n${err_compile_arduino}` ) );
+                }
             }
+        });
+
+        // error
+        cli.on('error', err => {
+            console.error(`${stage} error:`, err);
+            reject(err);
         });
     });
 }
+
 // 进度处理
-function parseCliLine(text) {
+function parseCliLine(text, stage) {
     const result = {
         device: 'Arduino',
-        stage: 'compile',//阶段
+        stage: stage,//阶段
         progress: null,//进度
         message: "",//消息
     };
 
-    // 编译完成
-    if ( text.includes('Sketch uses') || text.includes('Global variables use') ) {
-        result.stage = 'compile';
+    if(stage === "compile"){//编译不处理，直接返回
         result.message = text;
-    }else if ( text.includes('Write ') || text.includes('Erase flash') ) {// 刚刚进入烧录阶段
-        result.stage = 'flashing';
-        result.progress = 0;
-        //result.message = text;
-    }else if ( text.includes('Done in') || text.includes('New upload port') ) { // 成功
-        result.stage = 'flashing';
-        result.progress = 100;
-        //result.message = text;
-    }else{// 提取进度
+    }else{//上传阶段
         const percentMatch = text.match(/(\d+)%/);
-        if (percentMatch) {
-            result.stage = 'flashing';
-            result.progress = parseInt(percentMatch[1]);
+        if (text.includes('Erase flash')) {
+            result.progress = 0;
+        }else if(percentMatch){//提取进度
+            result.progress = parseInt( percentMatch[1], 10);
         }
     }
-
+    //console.log("00000",result);
     return result;
 }
+
+
+// 正常版本的arduino才用下面这个
+// 运行cli
+// function runCli(args, cliPath) {
+//     return new Promise((resolve, reject) => {
+//         const cli = spawn(cliPath, args, {
+//             windowsHide: true,
+//             cwd: path.dirname(cliPath)
+//         });
+
+//         cli.stdout.on('data', data => {
+//             const text = data.toString();
+//             const result = parseCliLine(text);//处理数据
+//             //console.log(result)
+//             mainWindow.webContents.send('flash-progress', result);
+//         });
+
+//         cli.stderr.on('data', data => {
+//             console.log(111)
+//             console.error(data.toString());
+//         });
+
+//         // cli.on('spawn', () => {
+//         //     console.log("CLI START");
+//         // });
+
+//         cli.on('close', code => {
+//             // console.log("exit:", code);
+//             if (code === 0) {
+//                 resolve();
+//                 if(stage_arduino == "upload"){
+//                     mainWindow.webContents.send("flash-done");
+//                 }
+//             } else {
+//                 reject(new Error(`CLI Error, exitCode= ${code}`));
+//             }
+//         });
+//     });
+// }
+// // 进度处理
+// function parseCliLine(text) {
+//     const result = {
+//         device: 'Arduino',
+//         stage: 'compile',//阶段
+//         progress: null,//进度
+//         message: "",//消息
+//     };
+
+//     // 编译完成
+//     if ( text.includes('Sketch uses') || text.includes('Global variables use') ) {
+//         result.stage = 'compile';
+//         result.message = text;
+//     }else if ( text.includes('Write ') || text.includes('Erase flash') ) {// 刚刚进入烧录阶段
+//         result.stage = 'flashing';
+//         result.progress = 0;
+//         //result.message = text;
+//     }else if ( text.includes('Done in') || text.includes('New upload port') ) { // 成功
+//         result.stage = 'flashing';
+//         result.progress = 100;
+//         //result.message = text;
+//     }else{// 提取进度
+//         const percentMatch = text.match(/(\d+)%/);
+//         if (percentMatch) {
+//             result.stage = 'flashing';
+//             result.progress = parseInt(percentMatch[1]);
+//         }
+//     }
+
+//     return result;
+// }
 
 //暂时不用的方案，舍不得删（创建临时文件且安装包）
 // async function downloadCodeSerial_Arduino1(code) {
