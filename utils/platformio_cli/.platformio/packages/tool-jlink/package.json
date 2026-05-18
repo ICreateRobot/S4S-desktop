@@ -1,0 +1,26 @@
+{
+  "name": "tool-jlink",
+  "version": "1.92000.0",
+  "description": "Software and Documentation Pack for SEGGER J-Link debug probes",
+  "keywords": [
+    "tools",
+    "debugger",
+    "debug server",
+    "uploader"
+  ],
+  "homepage": "https://www.segger.com/downloads/jlink/",
+  "system": "windows_amd64",
+  "export": {
+    "exclude": [
+      "$*",
+      "Doc/Manuals",
+      "Doc/ReleaseNotes",
+      "Samples",
+      "USBDriver/Vista*",
+      "USBDriver/WIN2K",
+      "USBDriver/XP*",
+      "USBDriver/x86",
+      "Uninstall.exe"
+    ]
+  }
+}

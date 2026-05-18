@@ -1,0 +1,1 @@
+{"events": [{"name": "cmd_run", "params": {"path_args": ["run"]}, "timestamp": 1779075854}, {"name": "platform_run", "params": {"platform": "renesas-ra", "framework": ["arduino"], "board": "uno_r4_wifi", "pid": "4a00614b0fbc386dad5e2dad6ee234092f7260b1", "platform_name": "renesas-ra", "platform_version": "1.8.0", "targets": ["upload"]}, "timestamp": 1779075854}]}
