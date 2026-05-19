@@ -1282,7 +1282,7 @@ function runBatProcess({ batPath, stage, extraArgs = []}) {
         cli.stderr.on('data', data => {
             const text = data.toString();
             // console.log("stderr");
-            // console.error(text);
+             console.error(text);
             if(stage === "compile"){
                 //err_compile_arduino = text;
             }else{
