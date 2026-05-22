@@ -2,7 +2,7 @@
  * @Author       : 蔡雅超 (ZIShen)
  * @LastEditors  : zishen
  * @Date         : 2025-12-04 11:38:14
- * @LastEditTime : 2026-05-15 16:32:25
+ * @LastEditTime : 2026-05-20 11:19:59
  * @Description  : esp oled 设备
  * Copyright (c) 2025 Author 蔡雅超 email: 2672632650@qq.com, All Rights Reserved.
  */
@@ -98,6 +98,15 @@ void hw_esp_oled_c::print(int x, int y, const char *text)
     Adafruit_SH1107::print(text);
 
     pf_rtos_semaphore_give(pf_rtos_binary_semaphore::I2C);
+}
+
+void hw_esp_oled_c::print(int x, int y, int value)
+{
+    this->print(x, y, std::to_string(value).c_str());
+}
+void hw_esp_oled_c::print(int x, int y, String text)
+{
+    this->print(x, y, text.c_str());
 }
 
 void hw_esp_oled_c::draw_pixel(int x, int y)

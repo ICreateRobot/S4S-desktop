@@ -2,7 +2,7 @@
  * @Author       : 蔡雅超 (zishen)
  * @LastEditors  : zishen
  * @Date         : 2026-01-20 21:56:04
- * @LastEditTime : 2026-05-15 10:03:18
+ * @LastEditTime : 2026-05-21 16:47:52
  * @Description  : ai camera
  * Copyright (c) 2026 Author 蔡雅超 email: 2672632650@qq.com, All Rights Reserved.
  */
@@ -149,7 +149,7 @@ public:
     // 已识别的卡片数量
     int card_count(void);
     // 指定的这张卡是否已被识别？
-    int card_detected(int type, int id = 1);
+    int card_detected(int type, int sel, int id = 1);
     // 识别出的卡片的位置信息
     int card_position(int select, int id = 1);
     // 当前状态是否与指定状态相符 0：ai未启动、1：连接中、2：待命、3：聆听中、4：说话中、5：配网中

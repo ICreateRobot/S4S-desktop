@@ -2,7 +2,7 @@
  * @Author       : 蔡雅超 (ZIShen)
  * @LastEditors  : zishen
  * @Date         : 2025-12-03 17:10:54
- * @LastEditTime : 2026-05-14 17:56:13
+ * @LastEditTime : 2026-05-20 16:11:17
  * @Description  : esp 音频硬件接口
  * Copyright (c) 2025 Author 蔡雅超 email: 2672632650@qq.com, All Rights Reserved.
  */
@@ -114,18 +114,24 @@ int hw_esp_audio_c::at_cmd(const char *cmd, uint16_t size)
 // 获取周围的声音强度
 int hw_esp_audio_c::get_sound_level(void)
 {
-    return music.Environmental_sound();
+    int sound_level = music.Environmental_sound();
+    delay(2);
+    return sound_level;
 }
 
 // 开始录音
 int hw_esp_audio_c::start_recording(int sec)
 {
-    return music.StartRecording_WVA_RECORD(sec);
+    int ret = 0;
+    ret = music.StartRecording_WVA_RECORD(sec);
+    delay(2);
+    return ret;
 }
 
 // 播放录音 0:停止播放 1:开始播放
 int hw_esp_audio_c::play_recording(int state)
 {
+    int ret = 0;
     switch (state)
     {
         case 0:
@@ -135,24 +141,32 @@ int hw_esp_audio_c::play_recording(int state)
             music.PlayRecording_WVA_RECORD();
             break;
     }
-    return 0;
+    delay(2);
+    return ret;
 }
 
 // 设置播放的音频文件
 int hw_esp_audio_c::set_audio_file(const char *file_name)
 {
-    return music.FilePath(file_name);
+    int ret = 0;
+    ret = music.FilePath(file_name);
+    delay(2);
+    return ret;
 }
 
 // 设置音量 0-100
 int hw_esp_audio_c::set_volume(int volume)
 {
-    return music.SetVolume(volume);
+    int ret = 0;
+    ret = music.SetVolume(volume);
+    delay(2);
+    return ret;
 }
 
 // 播放音频文件 0:停止播放 1:开始播放
 int hw_esp_audio_c::play_audio(int state)
 {
+    int ret = 0;
     switch (state)
     {
         case 0:
@@ -164,7 +178,8 @@ int hw_esp_audio_c::play_audio(int state)
             music.play();
             break;
     }
-    return 0;
+    delay(2);
+    return ret;
 }
 
 

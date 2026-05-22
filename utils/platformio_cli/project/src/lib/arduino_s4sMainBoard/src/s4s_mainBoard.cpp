@@ -301,6 +301,14 @@ int s4s_mainBoard::voice_get_state(uint8_t * state)
     return ret;
 }
 
+int s4s_mainBoard::voice_reset_state(void)
+{
+    int ret = 0;
+    uint8_t data = {0};
+    ret += this->writeReg(MAINBOARD_ADDR, VOICE_REG, &data, 1);
+    return ret;
+}
+
 int s4s_mainBoard::voice_get_version(uint8_t version[3])
 {
     if (NULL == version) return -1;

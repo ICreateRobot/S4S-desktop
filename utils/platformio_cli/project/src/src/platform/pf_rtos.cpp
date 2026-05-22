@@ -22,15 +22,13 @@
 /********************
  * static variables
  *******************/
+// 二值信号量
+static SemaphoreHandle_t xBinarySemaphore_array[(uint32_t)pf_rtos_binary_semaphore::MAX];
 
 
 /********************
  * global variables
  *******************/
-
-
-// 二值信号量
-static SemaphoreHandle_t xBinarySemaphore_array[(uint32_t)pf_rtos_binary_semaphore::MAX];
 
 
 /********************

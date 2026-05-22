@@ -2,7 +2,7 @@
  * @Author       : 蔡雅超 (ZIShen)
  * @LastEditors  : zishen
  * @Date         : 2025-11-29 19:39:25
- * @LastEditTime : 2026-05-15 09:58:45
+ * @LastEditTime : 2026-05-21 19:47:12
  * @Description  : k210 设备
  * Copyright (c) 2025 Author 蔡雅超 email: 2672632650@qq.com, All Rights Reserved.
  */
@@ -579,13 +579,14 @@ static fmap_result_t fMap_card_detected(udc_pack_t *pack)
     int         ret = 0;
     std::string type;
     int         type_int;
-    int         id = 1;
+    int         sel, id = 1;
 
     function_map_udcpack_get_param_string(pack, function_map_udcpack_id(0), &type);
     enum_map_get_value(enum_map, type.c_str(), type_int);
-    function_map_udcpack_get_param_int_default(pack, function_map_udcpack_id(1), &id);
+    function_map_udcpack_get_param_int(pack, function_map_udcpack_id(1), &sel);
+    function_map_udcpack_get_param_int_default(pack, function_map_udcpack_id(2), &id);
 
-    ret = hw_ai_camera.card_detected(type_int, id);
+    ret = hw_ai_camera.card_detected(type_int, sel, id);
 
     if (ret < 0)
         return fmap_result_t::make_error(ret);

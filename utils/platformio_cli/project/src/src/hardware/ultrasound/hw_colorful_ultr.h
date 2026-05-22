@@ -2,7 +2,7 @@
  * @Author       : 蔡雅超 (ZIShen)
  * @LastEditors  : zishen
  * @Date         : 2025-11-28 14:00:58
- * @LastEditTime : 2026-04-25 17:27:41
+ * @LastEditTime : 2026-05-20 14:10:46
  * @Description  : 炫彩超声波 (colorful_ultr)
  * Copyright (c) 2025 Author 蔡雅超 email: 2672632650@qq.com, All Rights Reserved.
  */
@@ -27,9 +27,9 @@ public:
 
 public:
     int set_i2c_port(uint8_t port);
-    int set_color(uint8_t red, uint8_t green, uint8_t blue, uint8_t light = 125);
+    int ultrasonic_set_color(uint8_t red, uint8_t green, uint8_t blue, uint8_t light = 125);
     float get_distance(void);
-    float get_distance(int unit);
+    float ultrasonic_get_distance(int unit);
 
 protected:
     virtual int write_reg(uint8_t addr, uint8_t reg, uint8_t *buf, uint16_t len);

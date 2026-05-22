@@ -128,9 +128,14 @@ public:
 
     /**
      * @description: Get voice commands
-     * @return {*}
+     * @return int 0: success, other: fail
      */    
     int voice_get_state(uint8_t * state);
+    /**
+     * @description: Reset voice commands
+     * @return int 0: success, other: fail
+     */    
+    int voice_reset_state(void);
     /**
      * @description: Get voice version
      * @return 0: success, other: fail

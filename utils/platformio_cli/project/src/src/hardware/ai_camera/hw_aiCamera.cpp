@@ -2,7 +2,7 @@
  * @Author       : 蔡雅超 (zishen)
  * @LastEditors  : zishen
  * @Date         : 2026-01-20 21:55:56
- * @LastEditTime : 2026-05-15 10:08:13
+ * @LastEditTime : 2026-05-21 19:45:29
  * @Description  : ai camera
  * Copyright (c) 2026 Author 蔡雅超 email: 2672632650@qq.com, All Rights Reserved.
  */
@@ -38,17 +38,6 @@ static const uint8_t CARD_REG           = 150; // 卡片获取寄存器
 static const uint8_t ESP_REG            = 165; // ESP32寄存器
 static const uint8_t SETTING_REG        = 180; // 设置寄存器
 
-static const num_map_t card_map = {
-    // clang-format off
-    {hw_aiCamera_c::GREEN,       0},
-    {hw_aiCamera_c::TURN_LEFT,   1},
-    {hw_aiCamera_c::STOP_MOVING, 2},
-    {hw_aiCamera_c::RED,         3},
-    {hw_aiCamera_c::TURN_RIGHT,  4},
-    {hw_aiCamera_c::EVENT_HONK,  5},
-    {hw_aiCamera_c::EVENT_TARGET,6},
-    // clang-format on
-};
 
 /********************
  * global variables
@@ -107,6 +96,7 @@ int hw_aiCamera_c::set_mode(int mode)
     int     ret_error = 0;
     uint8_t mode_data = (uint8_t)mode;
     ret_error         = this->writeReg(this->AICAMERA_ADDR, SYSTEM_REG + 0, &mode_data, 1);
+    delay(50);
     return ret_error;
 }
 
@@ -404,18 +394,48 @@ int hw_aiCamera_c::card_count(void)
 }
 
 // 指定的这张卡是否已被识别？
-int hw_aiCamera_c::card_detected(int type, int id)
+int hw_aiCamera_c::card_detected(int type, int sel, int id)
 {
+    static const num_map_t color_map = {
+        // clang-format off
+        {hw_aiCamera_c::GREEN,       0},
+        {hw_aiCamera_c::RED,         3},
+        // clang-format on
+    };
+
+    static const num_map_t action_map = {
+        // clang-format off
+        {hw_aiCamera_c::TURN_LEFT,   1},
+        {hw_aiCamera_c::STOP_MOVING, 2},
+        
+        {hw_aiCamera_c::TURN_RIGHT,  4},
+        {hw_aiCamera_c::EVENT_HONK,  5},
+        {hw_aiCamera_c::EVENT_TARGET,6},
+        // clang-format on
+    };
+
+    DATA_CHECK(sel, 1, 2);
     DATA_CHECK(id, 1, 4);
 
-    auto it = card_map.find(type);
-    if (it == card_map.end()) return -1;
+    uint8_t data = 0;
+
+    if (1 == sel)
+    {
+        auto it = color_map.find(type);
+        if (it == color_map.end()) return -1;
+        data = it->second;
+    } else if (2 == sel)
+    {
+        auto it = action_map.find(type);
+        if (it == action_map.end()) return -1;
+        data = it->second;
+    }
 
     int     ret_error        = 0;
     uint8_t detected_data[9] = {0};
     ret_error                = this->readReg(this->AICAMERA_ADDR, CARD_REG + id, detected_data, 9);
     if (ret_error != 0) { return ret_error; }
-    return detected_data[0] == it->second ? 1 : 0;
+    return detected_data[0] == data ? 1 : 0;
 }
 
 // 识别出的卡片的位置信息

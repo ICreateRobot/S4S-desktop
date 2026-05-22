@@ -2,7 +2,7 @@
  * @Author       : 蔡雅超 (ZIShen)
  * @LastEditors  : zishen
  * @Date         : 2025-12-04 11:38:22
- * @LastEditTime : 2026-04-29 10:31:16
+ * @LastEditTime : 2026-05-20 11:20:40
  * @Description  : esp oled 设备
  * Copyright (c) 2025 Author 蔡雅超 email: 2672632650@qq.com, All Rights Reserved.
  */
@@ -45,7 +45,9 @@ public:
      * @param text 文本内容
      */
     void print(int x, int y, const char *text);
-
+    void print(int x, int y, int value);
+    void print(int x, int y, String text);
+    
     /**
      * @description: 点亮屏幕中的像素
      * @param x 像素的x坐标

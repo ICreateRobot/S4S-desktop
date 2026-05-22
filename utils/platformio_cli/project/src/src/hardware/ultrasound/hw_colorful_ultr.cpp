@@ -83,7 +83,7 @@ float hw_cultr_c::get_distance(void)
     return (int)distance;
 }
 
-float hw_cultr_c::get_distance(int unit)
+float hw_cultr_c::ultrasonic_get_distance(int unit)
 {
     float distance = this->get_distance();
     switch (unit)
@@ -104,7 +104,7 @@ float hw_cultr_c::get_distance(int unit)
  * @param {uint8_t} light 0-255
  * @return {*}
  */
-int hw_cultr_c::set_color(uint8_t red, uint8_t green, uint8_t blue, uint8_t light)
+int hw_cultr_c::ultrasonic_set_color(uint8_t red, uint8_t green, uint8_t blue, uint8_t light)
 {
     int     ret       = 0;
     uint8_t buffer[4] = {light, red, green, blue};

@@ -2,7 +2,7 @@
  * @Author       : 蔡雅超 (zishen)
  * @LastEditors  : zishen
  * @Date         : 2026-01-15 15:44:19
- * @LastEditTime : 2026-05-07 10:18:56
+ * @LastEditTime : 2026-05-20 17:11:36
  * @Description  : 主板、超声波、四路巡线
  * Copyright (c) 2026 Author 蔡雅超 email: 2672632650@qq.com, All Rights Reserved.
  */
@@ -103,7 +103,7 @@ public:
      *            双电机控制
      ***************************************/
     // 等待完成动作。-1表示一直等待; >=0 表示等待时间 ms
-    int movemen_wait_finsh(int timeout = -1);
+    int movement_wait_finsh(int timeout = -1);
 
     // 设置电机端口 0 ~ 3
     int movement_set_motors(int left, int right);
@@ -120,8 +120,8 @@ public:
     int movement_drive(int lspeed, int rspeed);
     /**
      * @description: 按照指定的速度持续运行一段固定的时间或距离
-     * @param lspeed 0 ~ 100
-     * @param rspeed 0 ~ 100
+     * @param lspeed -100 ~ 100
+     * @param rspeed -100 ~ 100
      * @param data   0 ~ 1000
      * @param unit  0 ~ 2（0秒，1圈，2厘米)
      */

@@ -2,7 +2,7 @@
  * @Author       : 蔡雅超 (zishen)
  * @LastEditors  : zishen
  * @Date         : 2026-01-15 15:44:10
- * @LastEditTime : 2026-05-14 16:18:21
+ * @LastEditTime : 2026-05-21 09:32:45
  * @Description  : 主板、超声波、四路巡线
  * Copyright (c) 2026 Author 蔡雅超 email: 2672632650@qq.com, All Rights Reserved.
  */
@@ -79,7 +79,7 @@ int hw_main_board_c::isOnline(uint8_t dev_addr)
  *            双电机控制
  ***************************************/
 // 等待完成动作。-1表示一直等待; >=0 表示等待时间 ms
-int hw_main_board_c::movemen_wait_finsh(int timeout)
+int hw_main_board_c::movement_wait_finsh(int timeout)
 {
     delay(100);
     uint32_t last_tick = zst_tick_get();
@@ -148,7 +148,7 @@ int hw_main_board_c::movement_move(int dir, int value, int unit)
         ret_error += s4s_mainBoard::encoder_motor_pair_set_centimeter(value);
         ret_error += s4s_mainBoard::encoder_motor_pair_set_action(dir + 13);
     }
-    ret_error += movemen_wait_finsh();
+    ret_error += movement_wait_finsh();
     return ret_error;
 }
 
@@ -176,34 +176,41 @@ int hw_main_board_c::movement_drive(int lspeed, int rspeed)
 
 /**
  * @description: 按照指定的速度持续运行一段固定的时间或距离
- * @param lspeed 0~100
- * @param rspeed 0~100
+ * @param lspeed -100~100
+ * @param rspeed -100~100
  * @param data   0~1000
  * @param unit  0~3（0秒，1圈，2厘米)
  */
 int hw_main_board_c::movement_drive_for(int lspeed, int rspeed, int data, int unit)
 {
-    DATA_CHECK(lspeed, 0, 100);
-    DATA_CHECK(rspeed, 0, 100);
+    DATA_CHECK(lspeed, -100, 100);
+    DATA_CHECK(rspeed, -100, 100);
     DATA_CHECK(data, 0, 1000);
     DATA_CHECK(unit, 0, 2);
 
     int ret_error = 0;
-    ret_error += s4s_mainBoard::encoder_motor_pair_set_dynamic_speed(lspeed, rspeed);
+    uint8_t dir = 0;
+    if (lspeed >= 0 && rspeed >= 0)     dir = 0;
+    else if (lspeed < 0 && rspeed < 0)  dir = 1;
+    else if (lspeed < 0 && rspeed >= 0) dir = 2;
+    else if (lspeed >= 0 && rspeed < 0) dir = 3;
+
+    ret_error += s4s_mainBoard::encoder_motor_pair_set_dynamic_speed(abs(lspeed), abs(rspeed));
+
     if (0 == unit)
     {
         ret_error += s4s_mainBoard::encoder_motor_pair_set_time(data);
-        ret_error += s4s_mainBoard::encoder_motor_pair_set_action(5);
+        ret_error += s4s_mainBoard::encoder_motor_pair_set_action(5 + dir);
     } else if (1 == unit)
     {
         ret_error += s4s_mainBoard::encoder_motor_pair_set_ring(data);
-        ret_error += s4s_mainBoard::encoder_motor_pair_set_action(9);
+        ret_error += s4s_mainBoard::encoder_motor_pair_set_action(9 + dir);
     } else if (2 == unit)
     {
         ret_error += s4s_mainBoard::encoder_motor_pair_set_centimeter(data);
-        ret_error += s4s_mainBoard::encoder_motor_pair_set_action(13);
+        ret_error += s4s_mainBoard::encoder_motor_pair_set_action(13 + dir);
     }
-    ret_error += movemen_wait_finsh();
+    ret_error += movement_wait_finsh();
     return ret_error;
 }
 
@@ -479,7 +486,11 @@ int hw_main_board_c::voice_recognized(int recognized)
     uint8_t state;
     if (0 != s4s_mainBoard::voice_get_state(&state)) return -1;
 
-    if (state == recognized) return 1;
+    if (state == recognized) 
+    {
+        s4s_mainBoard::voice_reset_state();
+        return 1;
+    }
     else return 0;
 }
 
