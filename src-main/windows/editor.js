@@ -854,10 +854,15 @@ class EditorWindow extends ProjectRunningWindow {
     });
 
     // 固件烧录
-    this.ipc.handle('flash-firmware-all', async (_,device, firmwareName, port) => {
-      return serialManager.unifiedFlashFirmware(device, firmwareName, port); 
+    this.ipc.handle('flash-firmware-all', async (_,device, port) => {
+      return serialManager.unifiedFlashFirmware(device, port); 
     });
-    
+
+    // 写入ESP WiFi配置
+    this.ipc.handle('write-esp-wifi', async (_,ssid, password, port) => {
+      return serialManager.writeEspWiFi(ssid, password, port);
+    });
+
   
     // -----------------------------------------------------------------------------------------------------------------------------------
 

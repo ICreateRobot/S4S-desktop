@@ -281,6 +281,7 @@ async function connectSerialDevice(deviceInfo,deviceType) {
         }
     } catch (err) {
         console.log(err)
+        
         return { success: false, message: err.message };
     }
 }
@@ -411,6 +412,7 @@ async function safeDisconnect(silent = false) {
         }
     }catch(e){
         console.log(e)
+        throw e;
     }finally {
         serialDeviceState._disconnecting = false;
         //mainWindow.webContents.send('serial-disconnected');//(连接时也会清理一次串口，但是都会发送一个断开，后续应该改为根据不同情况来发送)
@@ -842,6 +844,8 @@ async function sendCommandSerial_D(command,type) {
     console.log('zf',command)
     if(type === "Microbit"){
         await sendSerialCommand(command  );
+    }else if(type === "ESP32"){
+        await sendSerialCommand(command  + '\r' );
     } else{
         serialDeviceState.serialPort.write(Buffer.from(command) );
     }
@@ -1134,6 +1138,8 @@ async function downloadCodeSerial_Arduino(code) {
         mainWindow.webContents.send('flash-progress', {device: 'Arduino',stage: 'compile',progress: 0});
         isFlashing_arduino = true;
 
+        await setNotCustomBuild(false);
+
         // 写入代码
         fs.writeFileSync(codeFile_Arduino, code);
 
@@ -1259,7 +1265,7 @@ function runPioUpload(port) {
 let err_upload_arduino = "";//上传错误
 let err_compile_arduino = "";//编译错误
 //通用 bat 执行
-function runBatProcess({ batPath, stage, extraArgs = []}) {
+function runBatProcess({ batPath, stage, extraArgs = [], useFirmwareUI = false}) {
     return new Promise((resolve, reject) => {
         const args = ['/c', batPath,...extraArgs];
 
@@ -1275,7 +1281,7 @@ function runBatProcess({ batPath, stage, extraArgs = []}) {
             // console.log(text);
             
             const result = parseCliLine(text,stage);
-            mainWindow.webContents.send('flash-progress', result);
+            mainWindow.webContents.send('flash-progress', result );
         });
 
         // stderr
@@ -1495,24 +1501,28 @@ function parseCliLine(text, stage) {
 
 //######################################## 统一固件烧录接口 ########################################
 // 分发
-async function unifiedFlashFirmware(deviceType, firmwareName, port) {
+async function unifiedFlashFirmware(deviceType,  port) {
     try {
         if(deviceType === 'Microbit'){
             if (serialDeviceState.serialPort) {// 设备已连接时
                 if(serialDeviceState.serialPort.path === port){//给当前设备
-                    await flashWithCurrentDevice(firmwareName,"");
+                    await flashWithCurrentDevice("Microbit_LinkBot_V1.0.0","");
                 }else{//非当前设备
                     throw new Error("已有连接设备，请先断开");
                 }
             }else{//未连接时
-                await connectAndFlash(firmwareName,port, "");
+                await connectAndFlash("Microbit_LinkBot_V1.0.0",port, "");
             }
         }
+        if (deviceType == 'Arduino') {
+            await arduinoUploadFirmware(port);
+        }
 
-        if (deviceType !== 'Microbit') {
-            throw new Error('不支持的设备类型');
+        if (deviceType == 'ESP32') {
+            await espUploadFirmware(port);
         }
         
+        // 烧录成功-通知前端结束流程
         mainWindow.webContents.send('flash-firmware-done');
         return { success: true };
     }catch(e){
@@ -1522,8 +1532,172 @@ async function unifiedFlashFirmware(deviceType, firmwareName, port) {
     }
  
 }
+//--------------------------Arduino烧录流程-------------------------
+async function arduinoUploadFirmware(port) {
+    let fakeTimer = null;
+    try {
+        // 如果有连接，先断开
+        const currentPort = serialDeviceState.serialPort?.path;
+        if (currentPort) {
+            await safeDisconnect(false);// 非静默断开
+        }
 
-// 使用当前设备烧录
+        await setNotCustomBuild(true);
+
+        //通知前端开始烧录
+        mainWindow.webContents.send('flash-firmware-start');
+
+
+
+         // 默认程序
+        const code = `
+#include "TinkerCode.h"
+
+void app_setup() {
+
+}
+
+void app_loop() {
+
+}`;
+        // 写入 main.cpp
+        fs.writeFileSync(codeFile_Arduino, code);
+
+        // 编译阶段 0~50
+        let compileProgress = 0;
+
+        fakeTimer = setInterval(() => {
+            // 随机步进
+            let step = Math.floor(Math.random() * 4) + 1;
+
+            // 偶尔卡一下
+            if (Math.random() < 0.15) step = 0;
+
+            compileProgress += step;
+
+            // 到 50 前减速 + 抖动
+            if (compileProgress > 49) {
+                compileProgress = 49;
+            }
+
+            // // 再加一点“回退感”（更真实）
+            // if (Math.random() < 0.05) {
+            //     compileProgress -= 1;
+            // }
+
+            if (compileProgress < 0) compileProgress = 0;
+
+            mainWindow.webContents.send( 'flash-firmware-progress', Math.round(compileProgress)  );
+        }, 300 + Math.random() * 300); // 间隔也随机（300~600ms）
+
+        await runFirmwareCompile();
+
+        clearInterval(fakeTimer);
+        mainWindow.webContents.send( 'flash-firmware-progress',  50 );
+
+        // 上传阶段 50~100
+        await runArduinoUploadFirmware(port);
+
+        mainWindow.webContents.send('flash-firmware-done');
+        return { success: true };
+    }catch(e){
+        if (fakeTimer) {
+            clearInterval(fakeTimer);
+        }
+        console.log(e)
+        throw e;
+    }
+}
+
+function runFirmwareCompile() {
+    return new Promise((resolve, reject) => {
+        const cli = spawn('cmd.exe', ['/c', compileBat], {
+            cwd: path.dirname(compileBat),
+            windowsHide: true
+        });
+
+        cli.on('close', code => {
+            if (code === 0) resolve();
+            else reject(new Error('compile failed'));
+        });
+
+        cli.on('error', reject);
+    });
+}
+
+//应该可以复用上面的烧录流程
+function runArduinoUploadFirmware(port) {
+    let progress =50;
+    return new Promise((resolve, reject) => {
+
+        const args = ['/c', uploadBat, port];
+        const cli = spawn('cmd.exe', args, {
+            cwd: path.dirname(uploadBat),
+            windowsHide: true
+        });
+
+        cli.stdout.on('data', data => {
+            const text = data.toString();
+            const match = text.match(/(\d+)%/);
+
+            if (match) {
+                const uploadPercent = Number(match[1]);
+
+                // 50~100 映射
+                let uiPercent = 50 + uploadPercent * 0.5;
+                if (uiPercent < progress) uiPercent = progress;
+                progress = uiPercent;
+
+                mainWindow.webContents.send( 'flash-firmware-progress',  Math.round(uiPercent));
+            }
+        });
+
+        cli.stderr.on('data', data => {
+            console.error('[Arduino upload]', data.toString());
+        });
+
+        cli.on('close', code => {
+            if (code === 0) {
+                resolve();
+            } else {
+                reject(new Error(`upload failed: ${code}`));
+            }
+        });
+
+        cli.on('error', reject);
+    });
+}
+
+// 控制编译配置文件，开启互动模式  false:注释掉
+function setNotCustomBuild(enable) {
+    const iniPath = path.join(
+        getResourcePath('platformio_cli'),
+        'project',
+        'src',
+        'platformio.ini'
+    );
+
+    let content = fs.readFileSync(iniPath, 'utf8');
+
+    if (enable) {
+        // 取消注释
+        content = content.replace(
+            /^\s*;\s*-D\s+NOT_CUSTOM_BUILD.*$/m,
+            '    -D NOT_CUSTOM_BUILD               ; 当前不为自定义编译'
+        );
+    } else {
+        // 注释掉
+        content = content.replace(
+            /^\s*-D\s+NOT_CUSTOM_BUILD.*$/m,
+            '    ; -D NOT_CUSTOM_BUILD               ; 当前不为自定义编译'
+        );
+    }
+
+    fs.writeFileSync(iniPath, content, 'utf8');
+}
+
+//--------------------------Microbit烧录流程--------------------------
+// microbit 使用当前设备烧录
 async function flashWithCurrentDevice(firmwareName,code) {
     try {
         // 生成HEX
@@ -1554,13 +1728,14 @@ async function flashWithCurrentDevice(firmwareName,code) {
     } catch (error) {
         // 出错后尝试断开连接
         if (serialDeviceState.daplink) {
-        try { await serialDeviceState.daplink.disconnect(); } catch(e){}
-        serialDeviceState.daplink = null;
+            try { await serialDeviceState.daplink.disconnect(); } catch(e){}
+            serialDeviceState.daplink = null;
         }
+        throw error;
     }
 }
 
-//未连接设备，直接连接并烧录(哎，一团乱麻，先这么用吧)
+// microbit 未连接设备，直接连接并烧录(哎，一团乱麻，先这么用吧)
 async function connectAndFlash(firmwareName,port, code) {
     let deviceInfo = {
         comPort:port,
@@ -1575,130 +1750,135 @@ async function connectAndFlash(firmwareName,port, code) {
 
     try {
         await flashWithCurrentDevice(firmwareName, code);
-    } finally {
+    } catch (e) {
+        throw e;   
+    }  finally {
         await safeDisconnect();
     }
 }
 
-// 临时连接新设备烧录 (未使用，ai写的未验证)
-// 临时状态管理（独立于现有状态）
-// let tempFlashState = {
-//     usbDevice: null,
-//     daplink: null,
-//     serialPort: null,
-//     abortTimer: null,
-//     shouldAbort: false,
-//     isFlashing: false
-// };
-// async function tempConnectAndFlash(port, code) {
-//     // 保存当前状态
-//     const originalState = {
-//         usbDevice: serialDeviceState.usbDevice,
-//         serialPort: serialDeviceState.serialPort,
-//         daplink: serialDeviceState.daplink
-//     };
+//--------------------------ESP32烧录流程--------------------------
+// ESP 烧录
+async function espUploadFirmware(port) {
+    try {
+        // 检测当前是否有串口连接
+        const currentPort = serialDeviceState.serialPort?.path;
+        if (currentPort) {
+            // 非静默断开（通知 UI）
+            await safeDisconnect(false);
+        }
 
-//     try {
-//         // 1. 清理当前连接（不销毁，只是临时断开）
-//         if (serialDeviceState.daplink) {
-//             try { await serialDeviceState.daplink.disconnect(); } catch (e) {}
-//             serialDeviceState.daplink = null;
-//         }
-//         if (serialDeviceState.serialPort && serialDeviceState.serialPort.isOpen) {
-//             try { await serialDeviceState.serialPort.close(); } catch (e) {}
-//         }
-//         if (serialDeviceState.usbDevice && serialDeviceState.usbDevice.opened) {
-//             // 注意：这里不关闭USB设备，避免彻底断开
-//             // 只是释放接口
-//             try {
-//                 if (serialDeviceState.usbDevice.interfaces?.length > 0) {
-//                     await serialDeviceState.usbDevice.interfaces[0].release();
-//                 }
-//             } catch (e) {}
-//         }
+        const exePath = getResourcePath('esp32_firmware/esptool.exe');
+        const binPath = getResourcePath('esp32_firmware/s4s_esp32_v1.0.0.bin');
 
-//         // 2. 连接新设备
-//         const device = usb.getDevices().find(d =>
-//             d.deviceDescriptor.idVendor === 0x0D28 &&
-//             d.deviceDescriptor.idProduct === 0x0204 &&
-//             d.deviceDescriptor.iSerialNumber === port // 通过端口匹配
-//         );
+        //通知前端开始烧录
+        mainWindow.webContents.send('flash-firmware-start');
 
-//         if (!device) throw new Error(`未找到设备: ${port}`);
+        //烧录
+        const args = [
+            '--port', port,
+            '--baud', '1152000',
+            'write_flash',
+            '0x0',
+            binPath
+        ];
+        const child = spawn(exePath, args);
 
-//         await device.open();
-//         if (device.interfaces?.length > 0) {
-//             await device.interfaces[0].claim();
-//         }
+        //进度解析
+        child.stdout.on('data', (data) => {
+            const msg = data.toString();
+            console.log('[ESP32 OUT]', msg);
+            parseEspProgress(msg);
+        });
 
-//         const serialPort = new SerialPort({ path: port, baudRate: 115200, autoOpen: false });
-//         await new Promise((resolve, reject) => {
-//             serialPort.open(err => err ? reject(err) : resolve());
-//         });
+        // child.stderr.on('data', (data) => {
+        //     const msg = data.toString();
+        //     console.log('[ESP32 ERR]', msg);
+        //     parseEspProgress(msg);
+        // });
 
-//         // 3. 烧录（使用临时状态）
-//         tempFlashState.usbDevice = device;
-//         tempFlashState.serialPort = serialPort;
+        //阻塞等待完成
+        await new Promise((resolve, reject) => {
+            child.on('close', (code) => {
+                if (code === 0) {
+                    resolve(code);
+                } else {
+                    reject(new Error(`烧录失败(code=${code})`));
+                }
+            });
+            child.on('error', (err) => reject(err));
+        });
 
-//         const hexPath = await generateV2Hex(code);
-//         const hexData = fs.readFileSync(hexPath);
+        return { success: true };
+    }catch(e){
+        console.log(e)
+        throw e; 
+    }
+}
 
-//         const transport = new DAPjs.USB(device);
-//         tempFlashState.daplink = new DAPLink(transport);
+// ESP 烧录进度解析
+function parseEspProgress(text) {
+    const match = text.match(/\((\d+)\s*%\)/);
+    if (!match) return;
+    const percent = Number(match[1]);
+    mainWindow.webContents.send( 'flash-firmware-progress', percent );
+}
 
-//         await tempFlashState.daplink.connect();
-//         tempFlashState.daplink.on(DAPLink.EVENT_PROGRESS, progress => {
-//             const percent = Math.round(progress * 100);
-//             mainWindow.webContents.send('flash-progress', percent);
-//         });
 
-//         await tempFlashState.daplink.flash(hexData);
+// 写入ESP WiFi配置
+async function writeEspWiFi(ssid, password, port) {
+    try {
+        // 当前已连接串口
+        const currentPort =  serialDeviceState.serialPort?.path;
 
-//         // 4. 烧录完成，断开新设备
-//         await tempFlashState.daplink.disconnect();
-//         await serialPort.close();
-//         await device.close();
+        // 未连接 或 连接的不是目标串口
+        if (!currentPort || currentPort !== port) {
+            // 有连接先断开
+            if (currentPort) {
+                await safeDisconnect(true); 
+            }
 
-//         // 5. 恢复原始连接
-//         if (originalState.usbDevice && originalState.serialPort) {
-//             try {
-//                 await originalState.usbDevice.open();
-//                 if (originalState.usbDevice.interfaces?.length > 0) {
-//                     await originalState.usbDevice.interfaces[0].claim();
-//                 }
-//                 await originalState.serialPort.open();
+            // 建立ESP32连接
+            await connectSerialDevice( { comPort: port, vendorId: DEVICE_CONFIGS.ESP32.vendorId, productId: DEVICE_CONFIGS.ESP32.productIds[0] }, "ESP32" );
+        }
 
-//                 // 恢复到主状态
-//                 serialDeviceState.usbDevice = originalState.usbDevice;
-//                 serialDeviceState.serialPort = originalState.serialPort;
-//                 setupSerialListeners('Microbit');
-//             } catch (e) {
-//                 console.warn('恢复原始连接失败:', e.message);
-//             }
-//         }
+        await new Promise(resolve => setTimeout(resolve, 500));
 
-//         mainWindow.webContents.send('flash-done');
-//         return { success: true, tempConnection: true };
+        // 进入REPL
+        await replSerial("ESP32");
 
-//     } catch (error) {
-//         // 出错尝试恢复原始连接
-//         if (originalState.usbDevice && originalState.serialPort) {
-//             try {
-//                 await originalState.usbDevice.open();
-//                 if (originalState.usbDevice.interfaces?.length > 0) {
-//                     await originalState.usbDevice.interfaces[0].claim();
-//                 }
-//                 await originalState.serialPort.open();
-//                 serialDeviceState.usbDevice = originalState.usbDevice;
-//                 serialDeviceState.serialPort = originalState.serialPort;
-//                 setupSerialListeners('Microbit');
-//             } catch (e) {
-//                 console.warn('恢复原始连接失败:', e.message);
-//             }
-//         }
-//         throw error;
-//     }
-// }
+        await new Promise(resolve => setTimeout(resolve, 200));
+
+        // 调用固件函数
+        await sendCommandSerial(
+            `update_wifi_config(${JSON.stringify(ssid)},${JSON.stringify(password)})`,
+            "ESP32"
+        ); 
+
+        // 保存Flash
+        await new Promise(resolve =>  setTimeout(resolve, 1000));
+
+        // 重启ESP32
+        await sendCommandSerial_D(
+            'reset()',
+            "ESP32"
+        );
+
+        // 等待一小段时间再断开本地状态
+        // await new Promise(resolve => setTimeout(resolve, 500));
+
+        // // 断开串口，清理状态
+        // await safeDisconnect(true);
+
+        return { success: true };
+    } catch (err) {
+        return {
+            success: false,
+            error: err.message
+        };
+    }
+}
+
 
 // 延时函数
 function delay(ms) {
@@ -1736,6 +1916,8 @@ function parseCleanedBuffer(cleanedData) {
 }
 
 
+
+
 module.exports = {
     serialInitialize,
     scanSerialDevice,
@@ -1750,6 +1932,7 @@ module.exports = {
     downloadCodeSerial_Arduino,
     cancelDownloadCodeSerial,
     unifiedFlashFirmware,
+    writeEspWiFi,
     mB_runCodeSerial
 };
   

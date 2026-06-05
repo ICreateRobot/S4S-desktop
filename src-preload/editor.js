@@ -56,7 +56,7 @@ contextBridge.exposeInMainWorld('EditorPreload', {
   onSerialReturn: (callback) => ipcRenderer.on('serial-return', (_, text) => callback(text)),// 监听串口返回
   sendSerialCommand: (command,type) => ipcRenderer.invoke('serial-send-command-direct', command,type),//串口数据直发
 
-  flashFirmwareAll: (device, firmwareName, port) => ipcRenderer.invoke('flash-firmware-all',device, firmwareName, port),//固件烧录
+  flashFirmwareAll: (device, port) => ipcRenderer.invoke('flash-firmware-all',device,  port),//固件烧录
   onFlashFirmwareProgress: (callback) => {
     const listener = (_, percent) => callback(percent);
     ipcRenderer.on('flash-firmware-progress', listener);
@@ -72,6 +72,7 @@ contextBridge.exposeInMainWorld('EditorPreload', {
     ipcRenderer.on('flash-firmware-error', listener);
     return () => { ipcRenderer.removeListener('flash-firmware-error', listener); };
   },
+  writeEspWiFi: (ssid, password, port) => ipcRenderer.invoke('write-esp-wifi', ssid, password, port),//写入ESP WiFi配置
 
 
   download_ArduinoCode: (code) => ipcRenderer.invoke('download-arduino-code',code),//烧录Arduino代码
