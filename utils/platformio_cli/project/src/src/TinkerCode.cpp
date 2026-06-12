@@ -2,7 +2,7 @@
  * @Author       : 蔡雅超 (zishen)
  * @LastEditors  : zishen
  * @Date         : 2026-04-27 19:49:10
- * @LastEditTime : 2026-05-15 14:25:24
+ * @LastEditTime : 2026-06-11 13:38:02
  * @Description  : 在进入用户程序前进行的初始化操作
  * Copyright (c) 2026 Author 蔡雅超 email: 2672632650@qq.com, All Rights Reserved.
  */
@@ -111,6 +111,7 @@ static void app_task_init(void *param)
     taskENTER_CRITICAL();
     {
         // clang-format off
+#ifdef NOT_CUSTOM_BUILD
         xTaskCreate((TaskFunction_t ) app_task_main,      //任务函数
                     (const char*    ) "main",             //任务名称
                     (uint16_t       ) 512,                //任务堆栈大小(单位字)
@@ -118,7 +119,6 @@ static void app_task_init(void *param)
                     (UBaseType_t    ) 1,                  //任务优先级
                     (TaskHandle_t*  ) NULL);              //任务句柄
 
-#ifdef NOT_CUSTOM_BUILD
         xTaskCreate((TaskFunction_t ) app_task_sys,      
                     (const char*    ) "sys",             
                     (uint16_t       ) 256,               
@@ -132,6 +132,13 @@ static void app_task_init(void *param)
                     (void*          ) nullptr,            
                     (UBaseType_t    ) 1,                  
                     (TaskHandle_t*  ) NULL);
+#else
+        xTaskCreate((TaskFunction_t ) app_task_main,  //任务函数
+                    (const char*    ) "main",         //任务名称
+                    (uint16_t       ) 1024,           //任务堆栈大小(单位字)
+                    (void*          ) nullptr,        //传递给任务函数的参数
+                    (UBaseType_t    ) 1,              //任务优先级
+                    (TaskHandle_t*  ) NULL);          //任务句柄
 #endif
         // clang-format on
     }

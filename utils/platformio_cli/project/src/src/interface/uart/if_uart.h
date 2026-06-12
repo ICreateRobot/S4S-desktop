@@ -2,7 +2,7 @@
  * @Author       : 蔡雅超 (ZIShen)
  * @LastEditors  : zishen
  * @Date         : 2025-11-26 15:26:46
- * @LastEditTime : 2026-04-23 17:59:41
+ * @LastEditTime : 2026-06-11 11:46:18
  * @Description  : 串口通信
  * Copyright (c) 2025 Author 蔡雅超 email: 2672632650@qq.com, All Rights Reserved.
  */
@@ -22,6 +22,7 @@ public:
     void   config_baud(uint32_t baudrate);
     void   send_bytes(uint8_t *buffer, uint16_t size);
     void   send_bytes(const std::string &str);
+    void   send_bytes(const String &str);
     void   send_bytes(const char *str);
     size_t read_bytes(uint8_t *buffer, uint16_t size);
     String read_string(void);

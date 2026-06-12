@@ -2,7 +2,7 @@
  * @Author       : 蔡雅超 (ZIShen)
  * @LastEditors  : zishen
  * @Date         : 2025-11-26 15:26:37
- * @LastEditTime : 2026-04-25 16:16:04
+ * @LastEditTime : 2026-06-11 11:46:26
  * @Description  : 交互串口
  * Copyright (c) 2025 Author 蔡雅超 email: 2672632650@qq.com, All Rights Reserved.
  */
@@ -92,6 +92,7 @@ void if_uart::config_baud(uint32_t baudrate)
 
 void if_uart::send_bytes(uint8_t *buffer, uint16_t size)
 {
+    if (0 == size) return;
     pf_rtos_semaphore_take(pf_rtos_binary_semaphore::UART, -1);
 
     this->_serial->write(buffer, size);
@@ -106,6 +107,11 @@ void if_uart::send_bytes(const char *str)
 }
 
 void if_uart::send_bytes(const std::string &str)
+{
+    send_bytes(str.c_str());
+}
+
+void if_uart::send_bytes(const String &str)
 {
     send_bytes(str.c_str());
 }
@@ -138,7 +144,7 @@ String if_uart::read_bytes_until(char end)
     pf_rtos_semaphore_take(pf_rtos_binary_semaphore::UART, -1);
 
     String str;
-    char buffer[50] = {0};
+    static char buffer[50] = {0};
     size_t read_size = 0;
     read_size        = this->_serial->readBytesUntil(end, buffer, sizeof(buffer));
     for (int i = 0; i < read_size; i++)
