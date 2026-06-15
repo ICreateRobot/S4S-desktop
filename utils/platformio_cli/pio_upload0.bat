@@ -3,7 +3,6 @@ setlocal
 
 set "SCRIPT_DIR=%~dp0"
 set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
-set CPLUS_INCLUDE_PATH=%SCRIPT_DIR%\.platformio\packages\toolchain-gccarmnoneeabi\arm-none-eabi\include\c++\7.2.1\arm-none-eabi;%CPLUS_INCLUDE_PATH%
 
 set "PYTHON=%SCRIPT_DIR%\python\python.exe"
 set "PLATFORMIO_CORE_DIR=%SCRIPT_DIR%\.platformio"
@@ -17,14 +16,17 @@ if not exist "%PYTHON%" (
 
 if not exist "%PROJECT_DIR%\platformio.ini" (
     echo Error: Project not found at %PROJECT_DIR%
-    echo Please add your PlatformIO project to project\src\
     exit /b 1
 )
 
-if not exist "%PROJECT_DIR%\.pio\libdeps" (
-    echo Error: Dependencies not installed.
-    echo Run pio_init.bat first to download libraries and tools.
+set "PORT=%1"
+if "%PORT%"=="" (
+    echo Usage: %~nx0 COM_PORT
+    echo Example: %~nx0 COM3
+    echo.
+    echo Available ports:
+    "%PYTHON%" -m platformio device list
     exit /b 1
 )
 
-"%PYTHON%" -m platformio run --project-dir "%PROJECT_DIR%" %* 
+"%PYTHON%" -m platformio run --target upload --project-dir "%PROJECT_DIR%" --upload-port "%PORT%"

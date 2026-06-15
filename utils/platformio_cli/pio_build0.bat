@@ -3,7 +3,6 @@ setlocal
 
 set "SCRIPT_DIR=%~dp0"
 set "SCRIPT_DIR=%SCRIPT_DIR:~0,-1%"
-set CPLUS_INCLUDE_PATH=%SCRIPT_DIR%\.platformio\packages\toolchain-gccarmnoneeabi\arm-none-eabi\include\c++\7.2.1\arm-none-eabi;%CPLUS_INCLUDE_PATH%
 
 set "PYTHON=%SCRIPT_DIR%\python\python.exe"
 set "PLATFORMIO_CORE_DIR=%SCRIPT_DIR%\.platformio"
@@ -27,4 +26,4 @@ if not exist "%PROJECT_DIR%\.pio\libdeps" (
     exit /b 1
 )
 
-"%PYTHON%" -m platformio run --project-dir "%PROJECT_DIR%" %* 
+"%PYTHON%" -m platformio run --project-dir "%PROJECT_DIR%" %*

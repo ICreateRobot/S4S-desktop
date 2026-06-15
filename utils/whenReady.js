@@ -119,10 +119,12 @@ async function initializeAppServices() {
 
   // 自动更新封装
   function safeCheckForUpdates() {
-    return autoUpdater.checkForUpdates().catch((err) => {
-      console.warn('自动更新检查失败:', err.message);
-      return null;
-    });
+    return false;
+    //直接关闭
+    // autoUpdater.checkForUpdates().catch((err) => {
+    //   console.warn('自动更新检查失败:', err.message);
+    //   return null;
+    // });
   }
 
   function setupAutoUpdater() {

@@ -975,7 +975,8 @@ async function downloadCodeSerial(code) {//主函数代码，扩展列表
 function getResourcePath(relativePath) {
     if (app.isPackaged) {
       // 打包后
-      return path.join(__dirname, '../../utils', relativePath);
+      //return path.join(__dirname, '../../utils', relativePath);
+      return path.join(process.resourcesPath, 'utils', relativePath);
     } else {
       // 开发环境
       return path.join(__dirname, '../../utils', relativePath);
@@ -1159,39 +1160,7 @@ async function downloadCodeSerial_Arduino(code) {
 
         return { success: true };
         
-        // 构建标志
-        // const buildFlags = '-I src -I include';
-
-        // // 编译
-        // const args = [
-        //     '--config-file',
-        //     configPath,
-        //     'compile',
-        //     '--fqbn','arduino:renesas_uno:unor4wifi',
-        //     '--build-property',`build.extra_flags=${buildFlags}`,
-        //     '--library', path.join(libsRoot, 'arduino_s4sMainBoard'),
-        //     '--library',path.join(libsRoot, 'arduino_k210'),
-        //     '--library',path.join(libsRoot, 'music_i2sPlayer'),
-        //     '--library',path.join(libsRoot, 'udcheck'),
-        //     '--library',path.join(libsRoot, 'zs_tools'),
-        //     projectDir
-        // ];
-        // await runCli(args, cliPath);
-
-        // console.log("upload start");
-
-        // stage_arduino = "upload";
-        // // 上传 
-        // await runCli([
-        //     '--config-file',
-        //     configPath,
-        //     'upload',
-        //     '--port', oldPort,
-        //     '--fqbn', 'arduino:renesas_uno:unor4wifi',
-        //     projectDir
-        // ],cliPath);
-
-        // return { success: true };
+   
     } catch (err) {
         let errorResult;
         if ( typeof err === 'object'  && !(err instanceof Error)){
@@ -1267,12 +1236,20 @@ let err_compile_arduino = "";//编译错误
 //通用 bat 执行
 function runBatProcess({ batPath, stage, extraArgs = [], useFirmwareUI = false}) {
     return new Promise((resolve, reject) => {
-        const args = ['/c', batPath,...extraArgs];
-
-        const cli = spawn('cmd.exe', args, {
-            cwd: path.dirname(batPath),
-            windowsHide: true
-        });
+        const cli = spawn( 'cmd.exe',[  '/c', batPath, ...extraArgs  ],
+            {
+                cwd: rootDir_Arduino, 
+                windowsHide: true,
+                env: {
+                    ...process.env,
+                    PLATFORMIO_CORE_DIR: path.join(rootDir_Arduino, '.platformio'),
+                    PATH: [
+                        path.join(rootDir_Arduino, 'python'),
+                        process.env.PATH
+                    ].join(';')
+                }
+            }
+        );
 
         // stdout
         cli.stdout.on('data', data => {
@@ -1288,9 +1265,9 @@ function runBatProcess({ batPath, stage, extraArgs = [], useFirmwareUI = false})
         cli.stderr.on('data', data => {
             const text = data.toString();
             // console.log("stderr");
-             console.error(text);
+             //console.error(text);
             if(stage === "compile"){
-                //err_compile_arduino = text;
+                err_compile_arduino += text;
             }else{
                 if(text.includes("could not open")){
                     err_upload_arduino = text;
@@ -1611,10 +1588,24 @@ void app_loop() {
 
 function runFirmwareCompile() {
     return new Promise((resolve, reject) => {
-        const cli = spawn('cmd.exe', ['/c', compileBat], {
-            cwd: path.dirname(compileBat),
-            windowsHide: true
-        });
+        // const cli = spawn('cmd.exe', ['/c', compileBat], {
+        //     cwd: path.dirname(compileBat),
+        //     windowsHide: true
+        // });
+        const cli = spawn( 'cmd.exe',[ '/c', compileBat ],
+            {
+                cwd: rootDir_Arduino, 
+                windowsHide: true,
+                env: {
+                    ...process.env,
+                    PLATFORMIO_CORE_DIR: path.join(rootDir_Arduino, '.platformio'),
+                    PATH: [
+                        path.join(rootDir_Arduino, 'python'),
+                        process.env.PATH
+                    ].join(';')
+                }
+            }
+        );
 
         cli.on('close', code => {
             if (code === 0) resolve();
@@ -1631,10 +1622,25 @@ function runArduinoUploadFirmware(port) {
     return new Promise((resolve, reject) => {
 
         const args = ['/c', uploadBat, port];
-        const cli = spawn('cmd.exe', args, {
-            cwd: path.dirname(uploadBat),
-            windowsHide: true
-        });
+        // const cli = spawn('cmd.exe', args, {
+        //     cwd: path.dirname(uploadBat),
+        //     windowsHide: true
+        // });
+        const cli = spawn( 'cmd.exe',args,
+            {
+                cwd: rootDir_Arduino, 
+                windowsHide: true,
+                env: {
+                    ...process.env,
+                    PLATFORMIO_CORE_DIR: path.join(rootDir_Arduino, '.platformio'),
+                    PATH: [
+                        path.join(rootDir_Arduino, 'python'),
+                        process.env.PATH
+                    ].join(';')
+                }
+            }
+        );
+        
 
         cli.stdout.on('data', data => {
             const text = data.toString();
