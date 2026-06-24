@@ -545,19 +545,23 @@ function setupSerialListeners(deviceType) {
         // });
     }else if(deviceType === "Arduino"){
         serialDeviceState.parser.on('data', data => {
-            console.log('ARDUINO DATA:', data);
+            //console.log('ARDUINO DATA:', data);
             let resultData = Buffer.from(data);
-
+            
             if (data.length === 3 && data.equals(Buffer.from([0x3e, 0x3e, 0x3e]))) {// 收到纯分隔符
                 resultData = Buffer.alloc(0);// 空响应
             }else if(data.length > 3 && data.slice(data.length - 3).equals(Buffer.from([0x3e, 0x3e, 0x3e]))){
                 resultData = data.slice(0, data.length - 3); // 去掉尾部>>>
             }else{
+                //新增串口数据解析并回传给前端
+                resultData = parseCleanedBuffer(resultData);
+                mainWindow.webContents.send('serial-return',resultData );
+
                 return
             }
             
             resultData = parseCleanedBuffer(resultData);
-            console.log(' result Data:', resultData);
+            //console.log(' result Data:', resultData);
             if (serialDeviceState.currentResolve) {
                 serialDeviceState.currentResolve(resultData);
                 serialDeviceState.currentResolve = null;
@@ -657,7 +661,6 @@ function setupMicrobitNormalParser() {
 
 
 //######################################## 模式切换 ########################################
-
 // 进入repl(microbit用)
 async function replSerial(type) {
     try {
@@ -841,7 +844,7 @@ function bufferToDecimal(buffer) {
 
 // 直接发送数据
 async function sendCommandSerial_D(command,type) {
-    console.log('zf',command)
+    //console.log('zf',command)
     if(type === "Microbit"){
         await sendSerialCommand(command  );
     }else if(type === "ESP32"){
@@ -1255,7 +1258,7 @@ function runBatProcess({ batPath, stage, extraArgs = [], useFirmwareUI = false})
         cli.stdout.on('data', data => {
             const text = data.toString();
             // console.log("stdout");
-             console.log(text);
+            //console.log(text);
             
             const result = parseCliLine(text,stage);
             mainWindow.webContents.send('flash-progress', result );
@@ -1265,7 +1268,7 @@ function runBatProcess({ batPath, stage, extraArgs = [], useFirmwareUI = false})
         cli.stderr.on('data', data => {
             const text = data.toString();
             // console.log("stderr");
-            console.error(text);
+            //console.error(text);
             if(stage === "compile"){
                 err_compile_arduino += text;
             }else{
