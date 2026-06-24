@@ -1255,7 +1255,7 @@ function runBatProcess({ batPath, stage, extraArgs = [], useFirmwareUI = false})
         cli.stdout.on('data', data => {
             const text = data.toString();
             // console.log("stdout");
-            // console.log(text);
+             console.log(text);
             
             const result = parseCliLine(text,stage);
             mainWindow.webContents.send('flash-progress', result );
@@ -1265,7 +1265,7 @@ function runBatProcess({ batPath, stage, extraArgs = [], useFirmwareUI = false})
         cli.stderr.on('data', data => {
             const text = data.toString();
             // console.log("stderr");
-             //console.error(text);
+            console.error(text);
             if(stage === "compile"){
                 err_compile_arduino += text;
             }else{
