@@ -845,6 +845,7 @@ function bufferToDecimal(buffer) {
 // 直接发送数据
 async function sendCommandSerial_D(command,type) {
     //console.log('zf',command)
+
     if(type === "Microbit"){
         await sendSerialCommand(command  );
     }else if(type === "ESP32"){
