@@ -2,7 +2,7 @@
  * @Author       : 蔡雅超 (zishen)
  * @LastEditors  : zishen
  * @Date         : 2026-01-20 23:06:10
- * @LastEditTime : 2026-04-27 08:44:45
+ * @LastEditTime : 2026-06-29 12:01:07
  * @Description  : 四路灰度
  * Copyright (c) 2026 Author 蔡雅超 email: 2672632650@qq.com, All Rights Reserved.
  */
@@ -29,6 +29,8 @@ public:
         LINE_SENSOR_CYAN,
         LINE_SENSOR_BLUE,
         LINE_SENSOR_PURPLE,
+        LINE_SENSOR_BLACK,
+        LINE_SENSOR_WHITE,
 
         LINE_SENSOR_PROBE_L2 = 0, // 最左侧探头
         LINE_SENSOR_PROBE_L1,

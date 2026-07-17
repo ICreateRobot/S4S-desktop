@@ -36,6 +36,8 @@ static const gray_color_t identify_map = {
     {(int)hw_gray_c::LINE_SENSOR_YELLOW,     (int)4}, 
     {(int)hw_gray_c::LINE_SENSOR_CYAN,       (int)5}, 
     {(int)hw_gray_c::LINE_SENSOR_PURPLE,     (int)6},
+    {(int)hw_gray_c::LINE_SENSOR_BLACK,      (int)7},
+    {(int)hw_gray_c::LINE_SENSOR_WHITE,      (int)8},
     // clang-format on
 };
 
@@ -49,6 +51,8 @@ static const gray_color_t command_map = {
     {(int)hw_gray_c::LINE_SENSOR_CYAN,          (int)11},
     {(int)hw_gray_c::LINE_SENSOR_BLUE,          (int)9},
     {(int)hw_gray_c::LINE_SENSOR_PURPLE,        (int)12},
+    {(int)hw_gray_c::LINE_SENSOR_BLACK,         (int)13},
+    {(int)hw_gray_c::LINE_SENSOR_WHITE,         (int)14},
     // clang-format on
 };
 

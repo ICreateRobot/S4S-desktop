@@ -2,7 +2,7 @@
  * @Author       : 蔡雅超 (ZIShen)
  * @LastEditors  : zishen
  * @Date         : 2025-11-30 20:20:52
- * @LastEditTime : 2026-04-28 18:08:09
+ * @LastEditTime : 2026-06-29 13:31:56
  * @Description  : 灰度传感器
  * Copyright (c) 2025 Author 蔡雅超 email: 2672632650@qq.com, All Rights Reserved.
  */
@@ -49,6 +49,8 @@ static const enum_map_t enum_map = {
     {"LINE_SENSOR_CYAN",         (int)hw_gray_c::LINE_SENSOR_CYAN},
     {"LINE_SENSOR_BLUE",         (int)hw_gray_c::LINE_SENSOR_BLUE},
     {"LINE_SENSOR_PURPLE",       (int)hw_gray_c::LINE_SENSOR_PURPLE},
+    {"LINE_SENSOR_BLACK",        (int)hw_gray_c::LINE_SENSOR_BLACK},
+    {"LINE_SENSOR_WHITE",        (int)hw_gray_c::LINE_SENSOR_WHITE},
 
     {"LINE_SENSOR_PROBE_L2",    (int)hw_gray_c::LINE_SENSOR_PROBE_L2},
     {"LINE_SENSOR_PROBE_L1",    (int)hw_gray_c::LINE_SENSOR_PROBE_L1},

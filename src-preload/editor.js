@@ -41,10 +41,12 @@ contextBridge.exposeInMainWorld('EditorPreload', {
 
   onSerialDisconnected: (callback) => ipcRenderer.on('serial-disconnected', (event) => callback()),//串口断开监听
 
+  sendBaudRateChange: (baudRate) => ipcRenderer.invoke('serial-change-baudrate', baudRate),//改变波特率
   serialSendCommand: (command,type) => ipcRenderer.invoke('serial-send-command', command,type),//发送数据
   enterReplMode: () => ipcRenderer.invoke('serial-enter-repl'),//进入repl模式
-  exitReplMode: () => ipcRenderer.invoke('serial-exit-repl'),//退出烧录模式（进入烧录）
-  enterReplModeESP: () => ipcRenderer.invoke('serial-enter-repl-esp'),//进入repl模式
+  exitReplMode: () => ipcRenderer.invoke('serial-exit-repl'),//退出repl模式（进入烧录）
+  enterReplModeESP: () => ipcRenderer.invoke('serial-enter-repl-esp'),//进入repl模式（esp）
+  exitReplModeESP: () => ipcRenderer.invoke('serial-exit-repl-esp'),//退出repl模式（进入烧录）（esp）
 
   mBUsbRunCode: (code) => ipcRenderer.invoke('microbit-usb-run',code),//microbit直接运行代码
   usbdownloadCode: (code,device) => ipcRenderer.invoke('usb-download-flash',code,device),//下载代码

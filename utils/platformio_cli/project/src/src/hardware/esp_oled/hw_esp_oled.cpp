@@ -2,7 +2,7 @@
  * @Author       : 蔡雅超 (ZIShen)
  * @LastEditors  : zishen
  * @Date         : 2025-12-04 11:38:14
- * @LastEditTime : 2026-05-20 11:19:59
+ * @LastEditTime : 2026-07-03 10:12:55
  * @Description  : esp oled 设备
  * Copyright (c) 2025 Author 蔡雅超 email: 2672632650@qq.com, All Rights Reserved.
  */
@@ -17,10 +17,10 @@
  *****************/
 #define LOG_TAG "hw_esp_oled"
 
-#define SCREEN_WIDTH 128  // OLED display width, in pixels
+#define SCREEN_WIDTH  128  // OLED display width, in pixels
 #define SCREEN_HEIGHT 128 // OLED display height, in pixels
-#define OLED_RESET -1     // can set an oled reset pin if desired
-
+#define OLED_RESET    -1     // can set an oled reset pin if desired
+#define OLED_ADDR     0x3C
 
 /****************************
  * function declaration
@@ -30,7 +30,7 @@
 /********************
  * static variables
  *******************/
-
+static TwoWire &wire_handle = Wire;
 
 /********************
  * global variables
@@ -46,7 +46,7 @@
  * class functions
  *******************/
 hw_esp_oled_c::hw_esp_oled_c() :
-    Adafruit_SH1107(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET)
+    Adafruit_SH1107(SCREEN_WIDTH, SCREEN_HEIGHT, &wire_handle, OLED_RESET)
 {}
 
 hw_esp_oled_c::~hw_esp_oled_c()
@@ -59,7 +59,7 @@ void hw_esp_oled_c::begin(void)
     if (0 == is_init)
     {
         is_init = 1;
-        Adafruit_SH1107::begin(0x3C, true);
+        Adafruit_SH1107::begin(OLED_ADDR, true);
     }
     setContrast(255); // 亮度
     setRotation(2);   // 旋转

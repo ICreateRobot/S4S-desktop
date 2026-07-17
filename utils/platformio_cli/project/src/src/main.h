@@ -32,7 +32,7 @@ typedef struct {
 // 版本
 #define VERSION_0 0
 #define VERSION_1 1
-#define VERSION_2 3
+#define VERSION_2 4
 
 extern ptask_root_1_collection_t ptask_root_1_collection;
 extern ptask_1_collection_t      ptask_1_collection;

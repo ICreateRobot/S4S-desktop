@@ -2,7 +2,7 @@
  * @Author       : 蔡雅超 (ZIShen)
  * @LastEditors  : zishen
  * @Date         : 2025-11-28 15:45:07
- * @LastEditTime : 2026-04-30 14:32:39
+ * @LastEditTime : 2026-07-03 09:07:25
  * @Description  : mainboard 协议处理模块
  * Copyright (c) 2025 Author 蔡雅超 email: 2672632650@qq.com, All Rights Reserved.
  */
@@ -564,18 +564,18 @@ static fmap_result_t fMap_device_battery(udc_pack_t *pack)
     if (ret_error >= 0)
         return fmap_result_t::make_ok().add_int(ret_error);
     else
-        return fmap_result_t::make_result(ret_error);
+        return fmap_result_t::make_error(ret_error);
 }
 
 static fmap_result_t fMap_device_voltage(udc_pack_t *pack)
 {
-    int ret_error = 0;
+    float ret_error = 0.0f;
 
     ret_error = hw_main_board.device_voltage();
-    if (ret_error >= 0)
-        return fmap_result_t::make_ok().add_int(ret_error);
+    if (ret_error >= 0.0f)
+        return fmap_result_t::make_ok().add_float(ret_error);
     else
-        return fmap_result_t::make_result(ret_error);
+        return fmap_result_t::make_error(ret_error);
 }
 
 static fmap_result_t fMap_device_version(udc_pack_t *pack)

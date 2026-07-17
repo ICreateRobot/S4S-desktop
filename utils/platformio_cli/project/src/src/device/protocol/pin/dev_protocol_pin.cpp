@@ -2,7 +2,7 @@
  * @Author       : 蔡雅超 (zishen)
  * @LastEditors  : zishen
  * @Date         : 2026-01-13 11:17:08
- * @LastEditTime : 2026-04-24 10:28:54
+ * @LastEditTime : 2026-07-03 10:57:11
  * @Description  : esp 引脚控制
  * Copyright (c) 2026 Author 蔡雅超 email: 2672632650@qq.com, All Rights Reserved.
  */
@@ -74,7 +74,7 @@ static fmap_result_t fMap_pinMode(udc_pack_t *pack)
 
     res_err = hw_pin.pinMode(pin.c_str(), mode);
 
-    fmap_result_t::make_result(res_err);
+    return fmap_result_t::make_result(res_err);
 }
 
 // 设置引脚输出电平  0:低电平 1:高电平
@@ -89,7 +89,7 @@ static fmap_result_t fMap_digitalWrite(udc_pack_t *pack)
 
     res_err = hw_pin.digitalWrite(pin.c_str(), value);
 
-    fmap_result_t::make_result(res_err);
+    return fmap_result_t::make_result(res_err);
 }
 
 // 读取引脚电平  0:低电平 1:高电平
@@ -116,6 +116,9 @@ static fmap_result_t fMap_analogWrite(udc_pack_t *pack)
 
     function_map_udcpack_get_param_string(pack, function_map_udcpack_id(0), &pin);
     function_map_udcpack_get_param_int(pack, function_map_udcpack_id(1), &value);
+    res_err = hw_pin.analogWrite(pin.c_str(), value);
+
+    return fmap_result_t::make_result(res_err);
 }
 
 // 读取引脚模拟值  0~1023

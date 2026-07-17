@@ -802,6 +802,10 @@ class EditorWindow extends ProjectRunningWindow {
       return serialManager.connectSerialDevice(deviceInfo,deviceType)
     });
 
+    this.ipc.handle('serial-change-baudrate', async (event, baudRate) => {
+      return serialManager.changeBaudRate(baudRate)
+    });
+
     // 断开串口连接
     this.ipc.handle('serial-disconnect', async () => {
       return serialManager.disconnectSerialDevice()
@@ -809,7 +813,7 @@ class EditorWindow extends ProjectRunningWindow {
 
     //进入烧录模式
     this.ipc.handle('serial-exit-repl', async () => {
-      return serialManager.replExitSerial();
+      return serialManager.replExitSerial("Microbit");
     });
  
     //进入repl模式
@@ -820,6 +824,11 @@ class EditorWindow extends ProjectRunningWindow {
     //进入repl模式esp
     this.ipc.handle('serial-enter-repl-esp', async () => {
       return serialManager.replSerial("ESP32");
+    });
+
+    //进入烧录模式esp
+    this.ipc.handle('serial-exit-repl-esp', async () => {
+      return serialManager.replExitSerial("ESP32");
     });
 
     

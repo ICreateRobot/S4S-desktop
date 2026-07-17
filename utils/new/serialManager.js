@@ -309,7 +309,6 @@ async function connSerialOnly(deviceInfo,deviceType) {
 
 // 复杂连接（+USB）
 async function connWithUsbMatching(deviceInfo,deviceType) {
-
     // 初始化串口-repl使用
     serialDeviceState.serialPort = new SerialPort({
         path: deviceInfo.comPort,
@@ -344,9 +343,18 @@ async function connWithUsbMatching(deviceInfo,deviceType) {
     return { success: true, info: { comPort: deviceInfo.comPort } };
 }
 
-//######################################## 断开 ########################################
 
+// ######################################## 改变波特率 ########################################
+async function changeBaudRate(baudRate) {
+    if (serialDeviceState.serialPort) {
+        await serialDeviceState.serialPort.update({ baudRate: Number(baudRate) }); 
+    }
+}
+
+
+//######################################## 断开 ########################################
 async function disconnectSerialDevice() {
+    let response;
     try {
         // 检查是否有活动连接
         if (!serialDeviceState.usbDevice && !serialDeviceState.serialPort) {
@@ -358,18 +366,29 @@ async function disconnectSerialDevice() {
         await safeDisconnect();
 
         //notifyRenderer('usb-device-disconnected', { wasReplActive });
-        return { 
-          success: true, 
-          message: '设备已断开连接',
-          wasReplActive // 返回断开前的REPL状态
+        response = {
+            success: true,
+            message: '设备已断开连接',
+            wasReplActive
         };
     } catch (err) {
-        return { 
-          success: false, 
-          error: err.message,
-          ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
+        response = {
+            success: false,
+            error: err instanceof Error ? err.message : String(err),
+            ...(process.env.NODE_ENV === 'development' && {
+                stack: err instanceof Error ? err.stack : undefined
+            })
         };
+    }finally {
+        // 兜底
+        if (!response) {
+            response = {
+                success: false,
+                error: 'disconnectSerialDevice 异常终止'
+            };
+        }
     }
+    return response;
 }
 
 //辅助函数--安全断开（是否静默断开-不通知前端）
@@ -646,16 +665,27 @@ function setupMicrobitReplParser() {
 }
 
 // microbit切换\r\n解析器处理数据（烧录模式使用）
-function setupMicrobitNormalParser() {
-    serialDeviceState.parser =  serialDeviceState.serialPort.pipe(new ReadlineParser({ delimiter: '\r\n' }));
+// function setupMicrobitNormalParser() {
+//     serialDeviceState.parser =  serialDeviceState.serialPort.pipe(new ReadlineParser({ delimiter: '\r\n' }));
 
-    serialDeviceState.parser.on('data', line => {
-        const text = line.toString().trim();
-        if (!text) return;
+//     serialDeviceState.parser.on('data', line => {
+//         const text = line.toString().trim();
+//         console.log('data',text)
+//         if (!text) return;
 
-        console.log('Microbit NORMAL:', text);
+//         console.log('Microbit NORMAL:', text);
 
-        mainWindow.webContents.send('serial-return',text );
+//         mainWindow.webContents.send('serial-return',text );
+//     });
+// }
+function setupMicrobitNormalParser() {//无解析器(可能触发未知问题，此处仅为适配下载模式下串口工具)
+    serialDeviceState.parser = serialDeviceState.serialPort;
+
+    serialDeviceState.parser.on('data', buffer => {
+        //console.log('Microbit NORMAL BUFFER:', buffer);
+        const text = buffer.toString('utf8');
+        console.log('Microbit NORMAL TEXT:', text);
+        mainWindow.webContents.send('serial-return', text);
     });
 }
 
@@ -670,8 +700,9 @@ async function replSerial(type) {
         //console.log('replllll');
 
         // 中断当前程序
-        await sendSerialCommand('\x03'); 
-        
+        if(type === "Microbit"){
+            await sendSerialCommand('\x03'); 
+        }
         
         await sendSerialCommand('from s4s import *\r',200);
         if(type === "Microbit"){
@@ -689,18 +720,20 @@ async function replSerial(type) {
 }
 
 // 退出repl（进入烧录模式）(microbit用)
-async function replExitSerial() {
+async function replExitSerial(type) {
     try {
         if (!serialDeviceState.serialPort ) {//|| !serialDeviceState.replActive
           return { success: false, error: "串口未连接"};
         }
     
-        await sendSerialCommand('\x03');
-        await sendSerialCommand('\x04');
+        if(type === "Microbit"){
+            await sendSerialCommand('\x03');
+            await sendSerialCommand('\x04');
+        }
     
         serialDeviceState.replActive = false;
     
-        switchSerialParser("Microbit","norepl")
+        switchSerialParser(type,"norepl")
         return { success: true };
     } catch (err) {
         return { success: false, error: err.message };
@@ -846,14 +879,18 @@ function bufferToDecimal(buffer) {
 async function sendCommandSerial_D(command,type) {
     //console.log('zf',command)
 
-    if(type === "Microbit"){
-        await sendSerialCommand(command  );
-    }else if(type === "ESP32"){
-        await sendSerialCommand(command  + '\r' );
-    } else{
+    // if(type === "Microbit"){
+    //     await sendSerialCommand(command  );
+    // }else if(type === "ESP32"){
+    //     await sendSerialCommand(command  + '\r' );
+    // } else{
+    //     serialDeviceState.serialPort.write(Buffer.from(command) );
+    // }
+    if(type === "Arduino"){
         serialDeviceState.serialPort.write(Buffer.from(command) );
-    }
-    
+    }else{
+        await sendSerialCommand(command );
+    } 
 }
 
 
@@ -1932,6 +1969,7 @@ module.exports = {
     serialInitialize,
     scanSerialDevice,
     connectSerialDevice,
+    changeBaudRate,
     disconnectSerialDevice,
     replSerial,
     replExitSerial,
