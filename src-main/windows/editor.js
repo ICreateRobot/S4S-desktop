@@ -384,8 +384,8 @@ class EditorWindow extends ProjectRunningWindow {
         defaultPath: settings.lastDirectory,
         filters: [
           {
-            name: 'Scratch Project',
-            extensions: ['sb3', 'sb2', 'sb'],
+            name: 'TinkerCode Project',
+            extensions: ['tcode'],
           }
         ]
       });
@@ -411,8 +411,8 @@ class EditorWindow extends ProjectRunningWindow {
         defaultPath: path.join(settings.lastDirectory, suggestedName),
         filters: [
           {
-            name: 'Scratch 3 Project',
-            extensions: ['sb3'],
+            name: 'TinkerCode Project',
+            extensions: ['tcode'],
           }
         ]
       });
