@@ -15,6 +15,7 @@ var saveClassData=[]//保存项目时类名
 
 let epo=50;
 let batch=32;
+let hands;
 
 const channelModelName=new BroadcastChannel('modelName')
 
@@ -35,20 +36,51 @@ tf.ready().then(() => {
 
 
 //加载PoseNet模型
-const poseNet = handpose.load().then(model => {
-    poseNetmode = model; // 保存加载好的模型
-    poseNetmode.estimateHands(video)
-    console.log("模型加载完成")
-    if(openFileEnd=='T'){
-        waitLoad.classList.add('hidden'); // 隐藏加载动画
-    }else{
-        document.getElementById('load').innerHTML = window.parent.block_msg_load_file;
-    }
+// const poseNet = handpose.load().then(model => {
+//     poseNetmode = model; // 保存加载好的模型
+//     poseNetmode.estimateHands(video)
+//     console.log("模型加载完成")
+//     if(openFileEnd=='T'){
+//         waitLoad.classList.add('hidden'); // 隐藏加载动画
+//     }else{
+//         document.getElementById('load').innerHTML = window.parent.block_msg_load_file;
+//     }
 
-})
-.catch(e=>{
-  console.log("posenet加载出错")
-});
+// })
+// .catch(e=>{
+//   console.log("posenet加载出错")
+// });
+let detector = null;
+
+async function loadHandModel() {
+
+    const model = handPoseDetection.SupportedModels.MediaPipeHands;
+
+    const detectorConfig = {
+        runtime: 'tfjs', // 或 mediapipe
+        modelType: 'full',
+        solutionPath:'./gesture/modules/hands.js',
+        detectorModelUrl: './gesture/modules/detector/model.json',
+        landmarkModelUrl: './gesture/modules/landmark/model.json',
+        maxHands: 1
+    };
+
+    detector = await handPoseDetection.createDetector(
+        model,
+        detectorConfig
+    );
+
+    console.log("Hand Pose Detection 加载完成");
+
+    if(openFileEnd=='T'){
+        waitLoad.classList.add('hidden');
+    }else{
+        document.getElementById('load').innerHTML =
+            window.parent.block_msg_load_file;
+    }
+}
+
+loadHandModel();
 
 const connections = [
     [0, 1],[1, 2],  [2, 4],  // 大拇指
@@ -68,8 +100,9 @@ async function detectPoseInRealTime(md,v,c) {
 //        return; // 如果视频帧没有加载好，直接跳过当前检测
 //    }
 
-    const hands = await md.estimateHands(v);
-    console.log(hands)
+    // hands = await md.estimateHands(v);
+    hands = await detector.estimateHands(v);
+    // console.log(hands)
 //    if (hands.length > 0) {
 //        hands.forEach(hand =>{
 //            POSE=hand;
@@ -147,12 +180,12 @@ async function detectPoseInRealTime(md,v,c) {
             const scaleY = canvasHeight / videoHeight;
 
             // 画出手部关键点
-            hand.landmarks.forEach((landmark, index) => {
+            hand.keypoints.forEach((point, index) => {
                  // 跳过每个手指的第二个关键点 (i*4 + 1)
                  if (index % 4 === 3) return;  // 跳过手指的第二个关键点
                 // 缩放坐标
-                const adjustedX = landmark[0] *scaleX
-                const adjustedY = landmark[1] *scaleY
+                const adjustedX = point.x 
+                const adjustedY = point.y 
 
                 // console.log(landmark[0])
                 // console.log(adjustedX)
@@ -168,14 +201,22 @@ async function detectPoseInRealTime(md,v,c) {
 
             // 绘制手指骨骼连线
             connections.forEach(([startIdx, endIdx]) => {
-                const start = hand.landmarks[startIdx];
-                const end = hand.landmarks[endIdx];
+                // const start = hand.keypoints[startIdx];
+                // const end = hand.keypoints[endIdx];
 
-                // 缩放后绘制连线
-                const adjustedStartX = start[0] * scaleX;
-                const adjustedStartY = start[1] * scaleY;
-                const adjustedEndX = end[0] * scaleX;
-                const adjustedEndY = end[1] * scaleY;
+                // // 缩放后绘制连线
+                // const adjustedStartX = start[0] * scaleX;
+                // const adjustedStartY = start[1] * scaleY;
+                // const adjustedEndX = end[0] * scaleX;
+                // const adjustedEndY = end[1] * scaleY;
+                const start = hand.keypoints[startIdx];
+                const end = hand.keypoints[endIdx];
+
+                const adjustedStartX = start.x ;
+                const adjustedStartY = start.y ;
+
+                const adjustedEndX = end.x ;
+                const adjustedEndY = end.y ;
 
                 ctx.beginPath();
                 ctx.moveTo(adjustedStartX, adjustedStartY);
@@ -197,8 +238,13 @@ function toggleAdvanced() {
 }
 // 处理 'touchstart' 和 'mousedown' 事件
 function handleButtonStart(e) {
+     // 只允许鼠标左键
+     if (e.type === 'mousedown' && e.button !== 0) {
+        return;
+    }
     e.preventDefault();
     e.stopPropagation();
+    
 
     document.addEventListener('mouseup', handleButtonEnd);
     document.addEventListener('touchend', handleButtonEnd);
@@ -217,6 +263,11 @@ function handleButtonStart(e) {
     canvas.transform='scaleX(-1)';
 
     shootTime=setInterval(()=>{
+        if(hands.length==0){
+            showToast(languageDate[localStorage.getItem('tw:language') || 'en']['noHandDetected'])
+            clearInterval(shootTime)
+            return
+        }
         const can=document.getElementById(canvasId)
 
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -251,9 +302,19 @@ function handleButtonStart(e) {
 
         //let poseData=POSE.keypoints.map(kp => [kp.position.x,kp.position.y,kp.score]);
 
-        relation.push({landmarks: POSE.landmarks.flat(),label:label,img:img.id})
-        data.push({landmarks: POSE.landmarks.flat(),label:label})
-        imageDATA.push({label:label,url:canvas.toDataURL('image/png'),data:{landmarks: POSE.landmarks.flat(),label:label}})
+        // relation.push({landmarks: POSE.landmarks.flat(),label:label,img:img.id})
+        const landmarks = POSE.keypoints.flatMap(p => [
+            p.x,
+            p.y,
+            p.z || 0
+        ]);
+        
+        relation.push({
+            landmarks,
+            label
+        });
+        data.push({landmarks: landmarks,label:label})
+        imageDATA.push({label:label,url:canvas.toDataURL('image/png'),data:{landmarks: landmarks,label:label}})
         //console.log(imageDATA)
     },400)
 }
@@ -261,7 +322,7 @@ function handleButtonStart(e) {
 
 // 开始检测
 function startDetection() {
-    if (!poseNetmode) {
+    if (!detector) {
         console.log("模型尚未加载");
         return;
     }
@@ -332,7 +393,7 @@ async function trainModel() {
         batchSize: Number(batch),
         callbacks: {
             onEpochEnd: (epoch, logs) =>{
-                progressText.text (`${languageDate[localStorage.getItem('tw:language') || 'zh-cn']['completed']} ${Math.ceil(((epoch+1)/epo)*100)} %`);
+                progressText.text (`${languageDate[localStorage.getItem('tw:language') || 'en']['completed']} ${Math.ceil(((epoch+1)/epo)*100)} %`);
                 barTrain.css('width', `${Math.ceil(((epoch+1)/epo)*100)}%`);
             }
         }
@@ -380,7 +441,7 @@ function className(){
 async function startShow(){console.log("识别");
     playModelType = true;
     // document.getElementsByClassName('model_show').style.height='520px'
-    $('#exportModel').text(languageDate[localStorage.getItem('tw:language') || 'zh-cn']['stopTest']);//停止测试
+    $('#exportModel').text(languageDate[localStorage.getItem('tw:language') || 'en']['stopTest']);//停止测试
 
 
     /*打开相机*/
@@ -410,7 +471,7 @@ async function startShow(){console.log("识别");
         detectPoseInRealTime(poseNetmode,show_video,'show_canvas');
         show_value(trainModel_classNUM);
     }, 200); // 10 FPS
-    $('#showLoad').css('display', 'none');
+    // $('#showLoad').css('display', 'none');
 }
 
 /*展示区实时显示数据*/
@@ -429,20 +490,29 @@ function show_value(num){
 /*结束展示*/
 function endShow(){console.log("结束识别");
     playModelType = false;
-    $('#exportModel').text(languageDate[localStorage.getItem('tw:language') || 'zh-cn']['exportModel']);//测试模型
+    $('#exportModel').text(languageDate[localStorage.getItem('tw:language') || 'en']['exportModel']);//测试模型
     /*打开相机*/
     // 停止所有视频流
     channelVideo.postMessage('close')
     if(show_video.srcObject) show_video.srcObject = null;
     if(show_video.src) show_video.src = null
-   
+    const canvas = document.getElementById('show_canvas');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
     clearInterval(showInterval);
-    $('#showLoad').css('display', 'block');
+    // $('#showLoad').css('display', 'block');
 }
 /*使用模型*/
 function predictPose(pose) {
-    const landmarks=pose.landmarks;
-    const input=tf.tensor2d([landmarks.flat()]);
+    // const landmarks=pose.landmarks;
+    const landmarks = pose.keypoints.flatMap(p => [
+        p.x,
+        p.y,
+        p.z || 0
+    ]);
+    
+    // const input=tf.tensor2d([landmarks.flat()]);
+    const input = tf.tensor2d([landmarks]);
     const floatInput=tf.cast(input,'float32');
     const result=model.predict(floatInput).arraySync();
 
@@ -512,7 +582,7 @@ function INIpage(projectName,image){
                     <div style="height: 1px; width: 100%; border-bottom: 1px solid black;"></div>
                     <div class="cameraBn" style="display: flex;">
                         <button class="camera" onclick="openCamera(this)"></button>
-                        <button class="upFile" onclick="openFile(this)"></button>
+                        <button class="upFile" onclick="openFile(this)" disabled></button>
                     </div>
                     <div class="cameraWin" id="cameraWin${image[i].label+1}">
                         <video class="cameraView" width="320" height="240" id="cameraView${image[i].label+1}"  autoplay muted></video>
@@ -521,7 +591,7 @@ function INIpage(projectName,image){
                 
                         <button class="cameraWinButton_close">×</button>
                     </div>
-                    <button class="upload gray" onmousedown="handleButtonStart(event)" onmouseup="handleButtonEnd(event)" ontouchstart="handleButtonStart(event)" ontouchend="handleButtonEnd(event)">长按此处持续拍照</button>
+                    <button class="upload gray" onmousedown="handleButtonStart(event)" onmouseup="handleButtonEnd(event)" ontouchstart="handleButtonStart(event)" ontouchend="handleButtonEnd(event)" onmouseleave="handleButtonEnd(event)">长按此处持续拍照</button>
                     <p class="card_numText"><span class='card_numText_n'>0</span><span id='n${image[i].label+1}'>个图像样本</span></p>
                     <div class="photoLibrary"> </div>
                     
@@ -542,19 +612,29 @@ function INIpage(projectName,image){
             relation.push(cent)
             data.push(image[i].data)
 
-             if(localStorage.getItem('tw:language')=='en'){
-                document.getElementById(`n${image[i].label+1}`).textContent=languageDate['en'].getSampleText(image[i].label+1)
-                 const uploadButtons = document.querySelectorAll('.upload');
-                uploadButtons.forEach(button => {
-                    button.textContent = languageDate['en']['keepPhoto'];
-                });
-            }else{
-                document.getElementById(`n${image[i].label+1}`).textContent=languageDate['zh-cn'].getSampleText(image[i].label+1)
-                const uploadButtons = document.querySelectorAll('.upload');
-                uploadButtons.forEach(button => {
-                    button.textContent = languageDate['zh-cn']['keepPhoto'];
-                });
-            }
+            //  if(localStorage.getItem('tw:language')=='en'){
+            //     document.getElementById(`n${image[i].label+1}`).textContent=languageDate['en'].getSampleText(image[i].label+1)
+            //      const uploadButtons = document.querySelectorAll('.upload');
+            //     uploadButtons.forEach(button => {
+            //         button.textContent = languageDate['en']['keepPhoto'];
+            //     });
+            // }else{
+            //     document.getElementById(`n${image[i].label+1}`).textContent=languageDate['zh-cn'].getSampleText(image[i].label+1)
+            //     const uploadButtons = document.querySelectorAll('.upload');
+            //     uploadButtons.forEach(button => {
+            //         button.textContent = languageDate['zh-cn']['keepPhoto'];
+            //     });
+            // }
+            const lang = localStorage.getItem('tw:language') || 'en';
+            const dataLang = languageDate[lang] || languageDate['en'];
+
+            document.getElementById(`n${image[i].label + 1}`).textContent =
+            dataLang.getSampleText(image[i].label + 1);
+
+            const uploadButtons = document.querySelectorAll('.upload');
+            uploadButtons.forEach(button => {
+            button.textContent = dataLang.keepPhoto;
+            });
         }
 
         $('.cameraWinButton_close').click(function() {
@@ -579,10 +659,10 @@ function saveProject(down){
     var saveMname=$('#tilt').text();
     var saveExplain=$('#explain').val();
     if(saveMname==""){
-        showToast(languageDate[localStorage.getItem('tw:language') || 'zh-cn']['nameNotNull'])//"项目名称不能为空"
+        showToast(languageDate[localStorage.getItem('tw:language') || 'en']['nameNotNull'])//"项目名称不能为空"
         return
     }else if(saveMname.includes('-')){
-        showToast(languageDate[localStorage.getItem('tw:language') || 'zh-cn']['illeglStr'])//"存在非法字符 - "
+        showToast(languageDate[localStorage.getItem('tw:language') || 'en']['illeglStr'])//"存在非法字符 - "
         return
     }
     /*重新获取类名集合*/
@@ -689,10 +769,10 @@ async function saveModel(){
     removeKeysWithPrefix('class')
     var saveMname=$('#tilt').text();
     if(saveMname==""){
-       showToast(languageDate[localStorage.getItem('tw:language') || 'zh-cn']['nameNotNull'])//"项目名称不能为空"
+       showToast(languageDate[localStorage.getItem('tw:language') || 'en']['nameNotNull'])//"项目名称不能为空"
        return
     }else if(saveMname.includes('-')){
-        showToast(languageDate[localStorage.getItem('tw:language') || 'zh-cn']['illeglStr'])//"存在非法字符 - "
+        showToast(languageDate[localStorage.getItem('tw:language') || 'en']['illeglStr'])//"存在非法字符 - "
         return
     }
 

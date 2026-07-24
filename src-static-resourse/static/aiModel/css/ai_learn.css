@@ -343,6 +343,11 @@ body {
     border: 3px solid white;
     background-color: 	#87CEFA;/*bffdf1*/
 }
+button.upFile:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
 /*上传*/
 .card .upload{
     position: relative;
@@ -619,6 +624,9 @@ body {
     margin-top: 5vh;
     border: 2px solid white;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* 添加柔和阴影 */
+    display: flex;
+    flex-direction: column;   /* 垂直排列 */
+    align-items: center;     /*  水平居中 */
 }
 #showLoad{
     width: 320px;
@@ -627,6 +635,7 @@ body {
     border-radius: 12px;
     position: absolute;
     z-index: 10;
+    display: none;
 }
 #show_cameraView{
 /*background:#ff0000;*/
@@ -791,6 +800,7 @@ body {
     gap: 8px;
     margin-bottom: 8px;
     padding: 8px 4px 0;
+    width: 100%;
   }
   
   .preview_title {

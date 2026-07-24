@@ -98,6 +98,10 @@ async function detectPoseInRealTime(md,v,c) {
 
 // 处理 'touchstart' 和 'mousedown' 事件
 function handleButtonStart(e) {
+    // 只允许鼠标左键
+    if (e.type === 'mousedown' && e.button !== 0) {
+        return;
+    }
     e.preventDefault();
     e.stopPropagation();
     document.addEventListener('mouseup', handleButtonEnd);
@@ -309,7 +313,7 @@ async function trainModel() {
        batchSize: Number(batch),
        callbacks: {
           onEpochEnd: (epoch, logs) =>{
-              progressText.text (`${languageDate[localStorage.getItem('tw:language') || 'zh-cn']['completed']} ${Math.ceil(((epoch+1)/epo)*100)} %`);
+              progressText.text (`${languageDate[localStorage.getItem('tw:language') || 'en']['completed']} ${Math.ceil(((epoch+1)/epo)*100)} %`);
               barTrain.css('width', `${Math.ceil(((epoch+1)/epo)*100)}%`);
           }
        }//训练进度
@@ -361,7 +365,7 @@ function className(){
 /*在展示区进行识别*/
 async function startShow(){
     playModelType = true;
-    $('#exportModel').text(languageDate[localStorage.getItem('tw:language') || 'zh-cn']['stopTest']);//停止测试
+    $('#exportModel').text(languageDate[localStorage.getItem('tw:language') || 'en']['stopTest']);//停止测试
 
     /*打开相机*/
     // videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -393,7 +397,7 @@ async function startShow(){
         //detectPoseInRealTime(poseNetmode,show_video,'show_canvas');
         show_value(trainModel_classNUM);
     }, 150); // 10 FPS
-    $('#showLoad').css('display', 'none');
+    // $('#showLoad').css('display', 'none');
 }
 
 /*展示区实时显示数据*/
@@ -412,14 +416,14 @@ async function show_value(num){
 /*结束展示*/
 function endShow(){console.log("结束识别");
     playModelType = false;
-    $('#exportModel').text(languageDate[localStorage.getItem('tw:language') || 'zh-cn']['exportModel']);//测试模型
+    $('#exportModel').text(languageDate[localStorage.getItem('tw:language') || 'en']['exportModel']);//测试模型
     /*打开相机*/
     // 停止所有视频流
     channelVideo.postMessage('close')
     if(show_video.srcObject) show_video.srcObject = null;
     if(show_video.src) show_video.src = null
     clearInterval(showInterval);
-    $('#showLoad').css('display', 'block');
+    // $('#showLoad').css('display', 'block');
 }
 /*使用模型*/
 async function predict() {
@@ -675,7 +679,7 @@ function INIpage(projectName,image){
                     <div style="height: 1px; width: 100%; border-bottom: 1px solid black;"></div>
                     <div class="cameraBn" style="display: flex;">
                         <button class="camera" onclick="openCamera(this)"></button>
-                        <button class="upFile" onclick="openFile(this)"></button>
+                        <button class="upFile" onclick="openFile(this)" disabled></button>
                     </div>
                     <div class="cameraWin" id="cameraWin${image[i].label+1}">
                         <video class="cameraView" width="320" height="240" id="cameraView${image[i].label+1}"  autoplay muted></video>
@@ -684,7 +688,7 @@ function INIpage(projectName,image){
                 
                         <button class="cameraWinButton_close">×</button>
                     </div>
-                    <button class="upload gray" onmousedown="handleButtonStart(event)" onmouseup="handleButtonEnd(event)" ontouchstart="handleButtonStart(event)" ontouchend="handleButtonEnd(event)">长按此处持续拍照</button>
+                    <button class="upload gray" onmousedown="handleButtonStart(event)" onmouseup="handleButtonEnd(event)" ontouchstart="handleButtonStart(event)" ontouchend="handleButtonEnd(event)" onmouseleave="handleButtonEnd(event)">长按此处持续拍照</button>
                     <p class="card_numText"><span class='card_numText_n'>0</span><span id='n${image[i].label+1}'>个图像样本</span></p>
                     <div class="photoLibrary"> </div>
                    
@@ -705,17 +709,17 @@ function INIpage(projectName,image){
             relation.push(cent)
             data.push(image[i].data)
 
-           if(localStorage.getItem('tw:language')=='en'){
-                document.getElementById(`n${image[i].label+1}`).textContent=languageDate['en'].getSampleText(image[i].label+1)
-                 const uploadButtons = document.querySelectorAll('.upload');
-                uploadButtons.forEach(button => {
-                    button.textContent = languageDate['en']['keepPhoto'];
-                });
-            }else{
+           if(localStorage.getItem('tw:language')=='zh-cn'){
                 document.getElementById(`n${image[i].label+1}`).textContent=languageDate['zh-cn'].getSampleText(image[i].label+1)
                 const uploadButtons = document.querySelectorAll('.upload');
                 uploadButtons.forEach(button => {
                     button.textContent = languageDate['zh-cn']['keepPhoto'];
+                });
+            }else{
+                document.getElementById(`n${image[i].label+1}`).textContent=languageDate['en'].getSampleText(image[i].label+1)
+                 const uploadButtons = document.querySelectorAll('.upload');
+                uploadButtons.forEach(button => {
+                    button.textContent = languageDate['en']['keepPhoto'];
                 });
             }
         }
@@ -743,10 +747,10 @@ function saveProject(down){
     var saveMname=$('#tilt').text();
     var saveExplain=$('#explain').val();
     if(saveMname==""){
-        showToast(languageDate[localStorage.getItem('tw:language') || 'zh-cn']['nameNotNull'])//"项目名称不能为空"
+        showToast(languageDate[localStorage.getItem('tw:language') || 'en']['nameNotNull'])//"项目名称不能为空"
         return
     }else if(saveMname.includes('-')){
-        showToast(languageDate[localStorage.getItem('tw:language') || 'zh-cn']['illeglStr'])//"存在非法字符 - "
+        showToast(languageDate[localStorage.getItem('tw:language') || 'en']['illeglStr'])//"存在非法字符 - "
         return
     }
     /*重新获取类名集合*/
@@ -860,10 +864,10 @@ async function saveModel(){
     removeKeysWithPrefix('class')
     var saveMname=$('#tilt').text();
     if(saveMname==""){
-       showToast(languageDate[localStorage.getItem('tw:language') || 'zh-cn']['nameNotNull'])//"项目名称不能为空"
+       showToast(languageDate[localStorage.getItem('tw:language') || 'en']['nameNotNull'])//"项目名称不能为空"
        return
     }else if(saveMname.includes('-')){
-        showToast(languageDate[localStorage.getItem('tw:language') || 'zh-cn']['illeglStr'])//"存在非法字符 - "
+        showToast(languageDate[localStorage.getItem('tw:language') || 'en']['illeglStr'])//"存在非法字符 - "
         return
     }
 

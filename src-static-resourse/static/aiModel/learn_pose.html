@@ -35,7 +35,7 @@
 
                   <div class="cameraBn" style="display: flex;">
                     <button class="camera" onclick="openCamera(this)"></button>
-                    <button class="upFile" onclick="openFile(this)"></button>
+                    <button class="upFile" onclick="openFile(this)" disabled></button>
                   </div>
                   <div class="cameraWin" id="cameraWin1">
                     <video class="cameraView" width="320" height="240" id="cameraView1"  autoplay muted></video>
@@ -44,7 +44,7 @@
             
                     <button class="cameraWinButton_close">×</button>
                   </div>
-                  <button class="upload gray" onmousedown="handleButtonStart(event)" onmouseup="handleButtonEnd(event)" ontouchstart="handleButtonStart(event)" ontouchend="handleButtonEnd(event)">点击此处可持续拍照</button>
+                  <button class="upload gray" onmousedown="handleButtonStart(event)" onmouseup="handleButtonEnd(event)" ontouchstart="handleButtonStart(event)" ontouchend="handleButtonEnd(event)" onmouseleave="handleButtonEnd(event)">点击此处可持续拍照</button>
                   <p class="card_numText"><span class='card_numText_n'>0</span><span id='n1'>个图像样本</span></p>
                   <div class="photoLibrary"> </div>
                 </div>
@@ -55,7 +55,7 @@
                   <div style="height: 1px; width: 100%; border-bottom: 1px solid black;"></div>
                   <div class="cameraBn" style="display: flex;">
                     <button class="camera" onclick="openCamera(this)"></button>
-                    <button class="upFile" onclick="openFile(this)"></button>
+                    <button class="upFile" onclick="openFile(this)" disabled></button>
                   </div>
                   <div class="cameraWin" id="cameraWin2">
                     <video class="cameraView" width="320" height="240" id="cameraView2"  autoplay muted></video>
@@ -64,7 +64,7 @@
             
                     <button class="cameraWinButton_close">×</button>
                   </div>
-                  <button class="upload gray" onmousedown="handleButtonStart(event)" onmouseup="handleButtonEnd(event)" ontouchstart="handleButtonStart(event)" ontouchend="handleButtonEnd(event)">点击此处可持续拍照</button>
+                  <button class="upload gray" onmousedown="handleButtonStart(event)" onmouseup="handleButtonEnd(event)" ontouchstart="handleButtonStart(event)" ontouchend="handleButtonEnd(event)" onmouseleave="handleButtonEnd(event)">点击此处可持续拍照</button>
                   <p class="card_numText"><span class='card_numText_n'>0</span><span id='n2'>个图像样本</span></p>
                   <div class="photoLibrary"> </div>
                 </div>
@@ -148,7 +148,7 @@
                   </select> -->
                 </div>
               </div>
-                <div id='showLoad'></div>
+                <!-- <div id='showLoad'></div> -->
                 <video width="320" height="240" id="show_cameraView"  autoplay muted></video>
                 <img width="320" height="240" crossorigin="anonymous" id="show_netCamera">
                 <canvas width="320" height="240" id="show_canvas" ></canvas>

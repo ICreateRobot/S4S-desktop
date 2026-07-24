@@ -74,7 +74,8 @@ const language = {
       "posture_alt": "姿态识别",
       "sound_alt": "语音识别",
       "createImg_alt": "新建项目",
-      "importImg_alt": "导入项目"
+      "importImg_alt": "导入项目",
+      "fileLoadFailed":"文件解析失败"
     },
     "en": {
       "back": "Back",
@@ -94,18 +95,19 @@ const language = {
         "posture_alt": "Pose Recognition",
         "sound_alt": "Speech Recognition",
         "createImg_alt": "New Project",
-        "importImg_alt": "Import Project"
+        "importImg_alt": "Import Project",
+        "fileLoadFailed":"File parsing failed"
     }
 }
 
 function changeLanguageChoice(){
-    const lang = localStorage.getItem('tw:language') === 'en' ? 'en' : 'zh-cn';
+    const lang = localStorage.getItem('tw:language') === 'zh-cn' ? 'zh-cn' : 'en';
     document.getElementById('topBar_tilt').textContent = language[lang]['topBar_tilt'];
     document.getElementById('back_less').textContent = language[lang]['back_less'];
     document.getElementById('recognize1').textContent = language[lang]['recognize1'];
     document.getElementById('recognize2').textContent = language[lang]['recognize2'];
     document.getElementById('recognize3').textContent = language[lang]['recognize3'];
-    document.getElementById('recognize4').textContent = language[lang]['recognize4'];
+    // document.getElementById('recognize4').textContent = language[lang]['recognize4'];
     // document.getElementById('newProject').textContent = language[lang]['newProject'];
     document.getElementById('importProject').textContent = language[lang]['importProject'];
 
@@ -155,7 +157,7 @@ function showProjectManagement(type) {
     //     alert("敬请期待")
     //     return
     // }
-    const lang = localStorage.getItem('tw:language') === 'en' ? 'en' : 'zh-cn';
+    const lang = localStorage.getItem('tw:language') === 'zh-cn' ? 'zh-cn' : 'en';
     setTimeout(() => {//增加一段延时，项目加载一会
         $('#modelSelection').css('display', 'none');
         $('#projectManagement').css('display', 'flex');
@@ -192,7 +194,7 @@ function renderProjectCards() {
 
 // 显示模型选择界面
 function showmodelSelection() {
-    const lang = localStorage.getItem('tw:language') === 'en' ? 'en' : 'zh-cn';
+    const lang = localStorage.getItem('tw:language') === 'zh-cn' ? 'zh-cn' : 'en';
     currentPage = "ai_choice";
     $('#modelSelection').css('display', 'flex');
     $('#projectManagement').css('display', 'none');
@@ -212,8 +214,38 @@ $('#newProject').click(function() {
 /*上传项目*/
 $('#uploadingProject').click(function() {
 
-    goLearn(-1,true);
+    // goLearn(-1,true);
     // alert("敬请期待")
+    var input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".json";
+
+    input.addEventListener("change", function(event) {
+        var file = event.target.files[0];
+        if (!file) return;
+
+        var reader = new FileReader();
+
+        reader.onload = function(e) {
+            try {
+                var jsonData = JSON.parse(e.target.result);
+
+                // ✅ 存到 localStorage（关键）
+                localStorage.setItem("importProjectJson", JSON.stringify(jsonData));
+
+                // ✅ 再跳转
+                goLearn(-1, true);
+
+            } catch (error) {
+                const lang = localStorage.getItem('tw:language') === 'zh-cn' ? 'zh-cn' : 'en';
+                showToast(language[lang]['fileLoadFailed']);
+            }
+        };
+
+        reader.readAsText(file);
+    });
+
+    input.click(); // ✅ 这里是用户点击触发，合法
    
 
 

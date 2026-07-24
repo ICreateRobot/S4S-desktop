@@ -61,15 +61,7 @@ function createCameraSelectionModal() {
 
     document.body.appendChild(modal);
 
-    if(localStorage.getItem('tw:language')=='en'){
-        document.getElementById('selectTitle').textContent = languageDate['en']['selectTitle'];
-        document.getElementById('local').textContent = languageDate['en']['local'];
-        document.getElementById('network').textContent = languageDate['en']['network'];
-        document.getElementById('robot').textContent = languageDate['en']['robot'];
-        document.getElementById('cameraIp').placeholder = languageDate['en']['cameraIp'];
-        document.getElementById('cameraSelectConfirm').textContent = languageDate['en']['cameraSelectConfirm'];
-        document.getElementById('cameraSelectCancel').textContent = languageDate['en']['cameraSelectCancel'];
-    }else{
+    if(localStorage.getItem('tw:language')=='zh-cn'){
         document.getElementById('selectTitle').textContent = languageDate['zh-cn']['selectTitle'];
         document.getElementById('local').textContent = languageDate['zh-cn']['local'];
         document.getElementById('network').textContent = languageDate['zh-cn']['network'];
@@ -77,6 +69,14 @@ function createCameraSelectionModal() {
         document.getElementById('cameraIp').placeholder = languageDate['zh-cn']['cameraIp'];
         document.getElementById('cameraSelectConfirm').textContent = languageDate['zh-cn']['cameraSelectConfirm'];
         document.getElementById('cameraSelectCancel').textContent = languageDate['zh-cn']['cameraSelectCancel'];
+    }else{
+        document.getElementById('selectTitle').textContent = languageDate['en']['selectTitle'];
+        document.getElementById('local').textContent = languageDate['en']['local'];
+        document.getElementById('network').textContent = languageDate['en']['network'];
+        document.getElementById('robot').textContent = languageDate['en']['robot'];
+        document.getElementById('cameraIp').placeholder = languageDate['en']['cameraIp'];
+        document.getElementById('cameraSelectConfirm').textContent = languageDate['en']['cameraSelectConfirm'];
+        document.getElementById('cameraSelectCancel').textContent = languageDate['en']['cameraSelectCancel'];
     }
 
     // 监听选择变化
@@ -103,7 +103,7 @@ function createCameraSelectionModal() {
         } else if(selectedType === 'network'){
             const inputIp = modal.querySelector('#cameraIp').value.trim();
             if (!inputIp) {
-                alert(languageDate[localStorage.getItem('tw:language') || 'zh-cn']['cameraIp']);
+                alert(languageDate[localStorage.getItem('tw:language') || 'en']['cameraIp']);
                 return;
             }
             if(whatCamera=='robot'){
@@ -136,7 +136,7 @@ function createCameraSelectionModal() {
             await new Promise(resolve => setTimeout(resolve, 600));
             robotCameraTimer=setTimeout(()=>{
                 waitLoad.classList.add('hidden');
-                showToast('加载超时,请检查摄像头')
+                showToast(languageDate[localStorage.getItem('tw:language') || 'en']['loadTimeout'])
             },5000)
             channelOpenCamera.postMessage(true)
             
@@ -217,7 +217,12 @@ const languageDate = {
     'completed':'已完成',
     'nameNotNull':'项目名称不能为空',
     'illeglStr':'存在非法字符 -',
-    'stopTest':'停止测试'
+    'stopTest':'停止测试',
+    "noHandDetected": "当前图像没有检测到手势",
+    "sampleNotNull":"样本数量不能为空",
+    "loadTimeout":"加载超时,请检查摄像头",
+    "makeSureModel":"请确保选择的模型与当前模式匹配",
+    "fileLoadFailed":"文件解析失败"
   },
   "en": {
     "tilt_G": "Gesture Training",
@@ -254,7 +259,12 @@ const languageDate = {
     'completed':'Completed',
     'nameNotNull':'The project name cannot be empty',
     'illeglStr':'Presence of illegal characters -',
-    'stopTest':'Stop testing'
+    'stopTest':'Stop testing',
+    "noHandDetected": "No hand detected in the current image",
+    "sampleNotNull":"Sample count cannot be empty",
+    "loadTimeout":"Loading timed out. Please check the camera.",
+    "makeSureModel":"Please ensure the selected model matches the current mode.",
+    "fileLoadFailed":"File parsing failed"
   }
 };
 
@@ -262,41 +272,7 @@ const languageDate = {
 const titleKey = `tilt_${MType}`;
 
 function changeLanguage(){
-    if(localStorage.getItem('tw:language')=='en'){
-        document.getElementById('tilt').textContent = languageDate['en'][titleKey];
-        document.getElementById('c1').value = languageDate['en'].getCategoryName(1);
-        document.getElementById('n1').textContent = languageDate['en'].getSampleText(1);
-        document.getElementById('c2').value = languageDate['en'].getCategoryName(2);
-        document.getElementById('n2').textContent = languageDate['en'].getSampleText(2);
-        document.getElementById('addClass').textContent = languageDate['en']['addClass'];
-        document.getElementById('trainText').textContent = languageDate['en']['trainText'];
-        document.getElementById('progressText').textContent = languageDate['en']['progressText'];
-        document.getElementById('epo').previousElementSibling.textContent = languageDate['en']['epo'];
-        document.getElementById('batch').previousElementSibling.textContent = languageDate['en']['batch'];
-        document.getElementById('speed').previousElementSibling.textContent = languageDate['en']['speed'];
-        document.getElementById('saveProject').textContent = languageDate['en']['saveProject'];
-        document.getElementById('select-camera').textContent = languageDate['en']['select-camera'];
-        document.querySelector('.preview_title').textContent = languageDate['en']['preview_title'];
-        document.getElementById('exportModel').textContent = languageDate['en']['exportModel'];
-        document.getElementById('playModel').textContent = languageDate['en']['playModel'];
-        document.getElementById('nameTilt').textContent = languageDate['en']['nameTilt'];
-        document.getElementById('instructionsTilt').textContent = languageDate['en']['instructionsTilt'];
-
-        
-
-        const uploadButtons = document.querySelectorAll('.upload');
-        uploadButtons.forEach(button => {
-            button.textContent = languageDate['en']['keepPhoto'];
-        });
-        
-        // Update advanced options
-        document.querySelector('.advanced-toggle').textContent = languageDate['en']['highLevel'];
-        document.querySelector('.reset-button').textContent = languageDate['en']['reset'];
-        document.querySelector('.learn-more-button').textContent =languageDate['en']['deepLearn'];
-        
-        // Update training button
-        document.getElementById('trainingModel').textContent = languageDate['en']['startTrain'];
-    }else{
+    if(localStorage.getItem('tw:language')=='zh-cn'){
         document.getElementById('tilt').textContent = languageDate['zh-cn'][titleKey];
         document.getElementById('c1').value = languageDate['zh-cn'].getCategoryName(1);
         document.getElementById('n1').textContent = languageDate['zh-cn'].getSampleText(1);
@@ -330,6 +306,41 @@ function changeLanguage(){
         
         // Update training button
         document.getElementById('trainingModel').textContent = languageDate['zh-cn']['startTrain'];
+    }else{
+
+        document.getElementById('tilt').textContent = languageDate['en'][titleKey];
+        document.getElementById('c1').value = languageDate['en'].getCategoryName(1);
+        document.getElementById('n1').textContent = languageDate['en'].getSampleText(1);
+        document.getElementById('c2').value = languageDate['en'].getCategoryName(2);
+        document.getElementById('n2').textContent = languageDate['en'].getSampleText(2);
+        document.getElementById('addClass').textContent = languageDate['en']['addClass'];
+        document.getElementById('trainText').textContent = languageDate['en']['trainText'];
+        document.getElementById('progressText').textContent = languageDate['en']['progressText'];
+        document.getElementById('epo').previousElementSibling.textContent = languageDate['en']['epo'];
+        document.getElementById('batch').previousElementSibling.textContent = languageDate['en']['batch'];
+        document.getElementById('speed').previousElementSibling.textContent = languageDate['en']['speed'];
+        document.getElementById('saveProject').textContent = languageDate['en']['saveProject'];
+        document.getElementById('select-camera').textContent = languageDate['en']['select-camera'];
+        document.querySelector('.preview_title').textContent = languageDate['en']['preview_title'];
+        document.getElementById('exportModel').textContent = languageDate['en']['exportModel'];
+        document.getElementById('playModel').textContent = languageDate['en']['playModel'];
+        document.getElementById('nameTilt').textContent = languageDate['en']['nameTilt'];
+        document.getElementById('instructionsTilt').textContent = languageDate['en']['instructionsTilt'];
+
+        
+
+        const uploadButtons = document.querySelectorAll('.upload');
+        uploadButtons.forEach(button => {
+            button.textContent = languageDate['en']['keepPhoto'];
+        });
+        
+        // Update advanced options
+        document.querySelector('.advanced-toggle').textContent = languageDate['en']['highLevel'];
+        document.querySelector('.reset-button').textContent = languageDate['en']['reset'];
+        document.querySelector('.learn-more-button').textContent =languageDate['en']['deepLearn'];
+        
+        // Update training button
+        document.getElementById('trainingModel').textContent = languageDate['en']['startTrain'];
     }
 }
 changeLanguage()
@@ -342,47 +353,75 @@ function getExtension(str) {
     let index = str.lastIndexOf(".");
     return index !== -1 ? str.slice(index + 1) : ""; // 如果找到点，截取后面的部分，否则返回空字符串
 }
-if(isLoad=='true'){
-    var input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".json"; // 只接受 JSON 文件
+// if(isLoad=='true'){
+//     var input = document.createElement("input");
+//     input.type = "file";
+//     input.accept = ".json"; // 只接受 JSON 文件
     
-    // 监听文件选择事件
-    input.addEventListener("change", function(event) {
-        var file = event.target.files[0]; // 获取选择的文件
+//     // 监听文件选择事件
+//     input.addEventListener("change", function(event) {
+//         var file = event.target.files[0]; // 获取选择的文件
     
-        if (!file) return;
+//         if (!file) return;
     
-        var reader = new FileReader();
+//         var reader = new FileReader();
     
-        reader.onload = function(e) {
-            try {
-                // 解析 JSON 数据
-                var jsonData = JSON.parse(e.target.result);
-                console.log("读取的 JSON 内容:", jsonData);
-                projectJson=jsonData
+//         reader.onload = function(e) {
+//             try {
+//                 // 解析 JSON 数据
+//                 var jsonData = JSON.parse(e.target.result);
+//                 console.log("读取的 JSON 内容:", jsonData);
+//                 projectJson=jsonData
+//                 if(getExtension(projectJson.projectName)==MType){
+//                     INIpage(projectJson.projectName,projectJson.imageDATA)
+//                 }else{
+//                     alert('请确保选择的模型与当前模式匹配')
+//                 }
+    
+                
+                
+//             } catch (error) {
+//                 console.error("JSON 解析失败:", error);
+//                 alert("文件内容格式错误！");
+//             }
+//         };
+    
+//         // 读取文件为文本
+//         reader.readAsText(file);
+//     });
+    
+//     // 触发文件选择框的打开
+//     input.click();
+// }
+
+window.addEventListener("load", function () {
+
+    if(isLoad=='true'){
+        let data = localStorage.getItem("importProjectJson");
+
+        if(data){
+            try{
+                // console.log(data)
+
+                let jsonData = JSON.parse(data);
+                projectJson = jsonData;
+
                 if(getExtension(projectJson.projectName)==MType){
                     INIpage(projectJson.projectName,projectJson.imageDATA)
                 }else{
-                    alert('请确保选择的模型与当前模式匹配')
+                    showToast(languageDate[localStorage.getItem('tw:language') || 'en']['makeSureModel'])
                 }
-    
-                
-                
-            } catch (error) {
-                console.error("JSON 解析失败:", error);
-                alert("文件内容格式错误！");
-            }
-        };
-    
-        // 读取文件为文本
-        reader.readAsText(file);
-    });
-    
-    // 触发文件选择框的打开
-    input.click();
-}
 
+                localStorage.removeItem("importProjectJson");
+
+            }catch(e){
+                console.log(e)
+                showToast(languageDate[localStorage.getItem('tw:language') || 'en']['fileLoadFailed']);
+            }
+        }
+    }
+
+});
 
 
 var  oldProjectName='';
@@ -545,7 +584,7 @@ $('#trainingModel').click(function() {
         //console.log("Card " + (index + 1) + " 的样本数量是: " + value);
         if(parseInt(value)<=0){
             // alert("样本数量不能为空")
-            showToast("样本数量不能为空")
+            showToast(languageDate[localStorage.getItem('tw:language') || 'en']['sampleNotNull'])
             canTrain = false;
             return false;
         }
@@ -657,7 +696,7 @@ function addCard() {
                   <div style="height: 1px; width: 100%; border-bottom: 1px solid black;"></div>
                   <div class="cameraBn" style="display: flex;">
                     <button class="camera" onclick="openCamera(this)"></button>
-                    <button class="upFile" onclick="openFile(this)"></button>
+                    <button class="upFile" onclick="openFile(this)" disabled></button>
                   </div>
                   <div class="cameraWin" id="cameraWin${NUM_CLASS}">
                     <video class="cameraView" width="320" height="240" id="cameraView${NUM_CLASS}"  autoplay muted></video>
@@ -666,7 +705,7 @@ function addCard() {
             
                     <button class="cameraWinButton_close">×</button>
                   </div>
-                  <button class="upload gray" onmousedown="handleButtonStart(event)" onmouseup="handleButtonEnd(event)" ontouchstart="handleButtonStart(event)" ontouchend="handleButtonEnd(event)">长按此处持续拍照</button>
+                  <button class="upload gray" onmousedown="handleButtonStart(event)" onmouseup="handleButtonEnd(event)" ontouchstart="handleButtonStart(event)" ontouchend="handleButtonEnd(event)" onmouseleave="handleButtonEnd(event)">长按此处持续拍照</button>
                   <p class="card_numText"><span class='card_numText_n'>0</span><span id="n${NUM_CLASS}">个图像样本</span></p>
                   <div class="photoLibrary"> </div>
 
@@ -686,19 +725,21 @@ function addCard() {
     });
 
      
-    if(localStorage.getItem('tw:language')=='en'){
-        document.getElementById(`c${NUM_CLASS}`).value=languageDate['en'].getCategoryName(NUM_CLASS)
-        document.getElementById(`n${NUM_CLASS}`).textContent=languageDate['en'].getSampleText(NUM_CLASS)
-        const uploadButtons = document.querySelectorAll('.upload');
-        uploadButtons.forEach(button => {
-            button.textContent = languageDate['en']['keepPhoto'];
-        });
-    }else{
+    if(localStorage.getItem('tw:language')=='zh-cn'){
         document.getElementById(`c${NUM_CLASS}`).value=languageDate['zh-cn'].getCategoryName(NUM_CLASS)
         document.getElementById(`n${NUM_CLASS}`).textContent=languageDate['zh-cn'].getSampleText(NUM_CLASS)
         const uploadButtons = document.querySelectorAll('.upload');
         uploadButtons.forEach(button => {
             button.textContent = languageDate['zh-cn']['keepPhoto'];
+        });
+
+    }else{
+        
+        document.getElementById(`c${NUM_CLASS}`).value=languageDate['en'].getCategoryName(NUM_CLASS)
+        document.getElementById(`n${NUM_CLASS}`).textContent=languageDate['en'].getSampleText(NUM_CLASS)
+        const uploadButtons = document.querySelectorAll('.upload');
+        uploadButtons.forEach(button => {
+            button.textContent = languageDate['en']['keepPhoto'];
         });
     }
 }
@@ -999,7 +1040,7 @@ function trainModel_end(){
     $('#playModel').removeClass('playGray');
 
     //恢复中间训练按钮
-    trainingModel.text(languageDate[localStorage.getItem('tw:language') || 'zh-cn']['retrain']);//"再次训练"
+    trainingModel.text(languageDate[localStorage.getItem('tw:language') || 'en']['retrain']);//"再次训练"
     // trainingModel.css('display', 'block');
     // trainingModel_progress.css('display', 'none');
     // progressText.text ('0%');
