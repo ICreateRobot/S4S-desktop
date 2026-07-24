@@ -2,7 +2,7 @@
  * @Author       : 蔡雅超 (ZIShen)
  * @LastEditors  : zishen
  * @Date         : 2025-11-26 15:26:37
- * @LastEditTime : 2026-06-11 11:46:26
+ * @LastEditTime : 2026-07-15 11:38:44
  * @Description  : 交互串口
  * Copyright (c) 2025 Author 蔡雅超 email: 2672632650@qq.com, All Rights Reserved.
  */
@@ -185,6 +185,44 @@ int if_uart::read(void)
 
     return data;
 }
+
+int if_uart::print(const std::string &str, char end)
+{
+    return print(str.c_str(), end);
+}
+
+int if_uart::print(const String &str, char end)
+{
+    return print(str.c_str(), end);
+}
+
+int if_uart::print(const char *str, char end)
+{
+    uint16_t size = 0;
+    send_bytes(str);
+    size = (uint16_t)strlen(str);
+    if (end > 0) 
+    {
+        send_bytes((uint8_t *)&end, 1);
+        size++;
+    }
+    return size;
+}
+
+int if_uart::print(int value, char end)
+{
+    char buffer[20] = {0};
+    snprintf(buffer, sizeof(buffer), "%d", value);
+    return print(buffer, end);
+}
+
+int if_uart::print(float value, char end)
+{
+    char buffer[20] = {0};
+    snprintf(buffer, sizeof(buffer), "%f", value);
+    return print(buffer, end);
+}
+
 
 /****************************
  * static function

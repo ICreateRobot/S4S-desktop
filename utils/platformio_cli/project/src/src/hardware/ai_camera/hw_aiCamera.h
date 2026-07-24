@@ -2,7 +2,7 @@
  * @Author       : 蔡雅超 (zishen)
  * @LastEditors  : zishen
  * @Date         : 2026-01-20 21:56:04
- * @LastEditTime : 2026-05-21 16:47:52
+ * @LastEditTime : 2026-07-13 18:02:06
  * @Description  : ai camera
  * Copyright (c) 2026 Author 蔡雅超 email: 2672632650@qq.com, All Rights Reserved.
  */
@@ -36,6 +36,7 @@ public:
         AXIS_Y,           // 物体位置Y轴
         AXIS_W,           // 物体宽度
         AXIS_H,           // 物体高度
+        
         DOWN=1,           // 下区域
         MIDDLE,           // 中区域
         UP,               // 上区域

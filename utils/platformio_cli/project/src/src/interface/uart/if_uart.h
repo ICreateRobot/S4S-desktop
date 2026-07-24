@@ -2,7 +2,7 @@
  * @Author       : 蔡雅超 (ZIShen)
  * @LastEditors  : zishen
  * @Date         : 2025-11-26 15:26:46
- * @LastEditTime : 2026-06-11 11:46:18
+ * @LastEditTime : 2026-07-15 11:39:56
  * @Description  : 串口通信
  * Copyright (c) 2025 Author 蔡雅超 email: 2672632650@qq.com, All Rights Reserved.
  */
@@ -31,6 +31,11 @@ public:
     int    available(void);
     int    read(void);
 
+    int    print(const std::string &str, char end = 0);
+    int    print(const String &str, char end = 0);
+    int    print(const char *str, char end = 0);
+    int    print(int value, char end = 0);
+    int    print(float value, char end = 0);
 private:
     UART *_serial;
 };
