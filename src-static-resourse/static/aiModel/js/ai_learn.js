@@ -222,7 +222,9 @@ const languageDate = {
     "sampleNotNull":"样本数量不能为空",
     "loadTimeout":"加载超时,请检查摄像头",
     "makeSureModel":"请确保选择的模型与当前模式匹配",
-    "fileLoadFailed":"文件解析失败"
+    "fileLoadFailed":"文件解析失败",
+    "classNum2":"类别数量至少为2",
+    "firstCloseCamera":"请先关闭摄像头"
   },
   "en": {
     "tilt_G": "Gesture Training",
@@ -264,7 +266,9 @@ const languageDate = {
     "sampleNotNull":"Sample count cannot be empty",
     "loadTimeout":"Loading timed out. Please check the camera.",
     "makeSureModel":"Please ensure the selected model matches the current mode.",
-    "fileLoadFailed":"File parsing failed"
+    "fileLoadFailed":"File parsing failed",
+    "classNum2":"The number of categories must be at least 2",
+    "firstCloseCamera":"Please turn off the camera first."
   }
 };
 
@@ -746,7 +750,10 @@ function addCard() {
 
 /*删除卡片*/
 function deleteCard(button) {
-    if(cameraType) return;
+    if(cameraType){
+        showToast(languageDate[localStorage.getItem('tw:language') || 'en']['firstCloseCamera'])
+        return
+    } ;
     console.log('删除了一个卡片')
     var card = button.parentElement;
     var dellab = parseInt(card.id.split('-')[1])-1;

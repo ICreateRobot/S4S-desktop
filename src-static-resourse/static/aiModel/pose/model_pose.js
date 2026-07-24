@@ -303,7 +303,10 @@ let labelClass = [];//label集合，放置当前训练模型的lable，比对数
 /*训练模型*/
 async function trainModel() {
     if(isTraining) return
-    if(SUM_CLASS<2) return
+    if(SUM_CLASS<2){
+        showToast(languageDate[localStorage.getItem('tw:language') || 'en']['classNum2'])
+        return
+    }
     isTraining=true
     closeAllCamera()
     await tf.setBackend('cpu')
@@ -363,7 +366,7 @@ function className(){
         card.classList.add('class_show_card');
         card.id = 'class_show_card_'+i;
         card.innerHTML = `
-            <div class="class_show_name" >${name}</div>
+            <div class="class_show_name" title="${name}">${name}</div>
             <div class='class_show_progressTrain'><div class='class_show_barTrain'></div></div>
             <div class="class_show_num" >0%</div>
         `;

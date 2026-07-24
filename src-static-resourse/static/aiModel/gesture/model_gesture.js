@@ -346,6 +346,63 @@ function stopDetection() {
         console.log("没有正在进行的检测");
     }
 }
+function showToast(message, duration = 3000) {
+    // 如果 toast 容器不存在，则创建一个
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        Object.assign(container.style, {
+            position: 'fixed',
+            top: '20px',
+            right: '20px',
+            zIndex: 9999,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '10px'
+        });
+        document.body.appendChild(container);
+    }
+
+    // 创建 toast 元素
+    const toast = document.createElement('div');
+    toast.textContent = message;
+
+    // 样式设置
+    Object.assign(toast.style, {
+        background: '#333',
+        color: '#fff',
+        padding: '10px 20px',
+        borderRadius: '8px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+        opacity: '0',
+        transform: 'translateY(-20px)',
+        transition: 'opacity 0.3s ease, transform 0.3s ease',
+        maxWidth: '300px'
+    });
+
+    // 添加 toast 到容器
+    container.appendChild(toast);
+
+    // 强制触发重绘以启用动画
+    requestAnimationFrame(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0)';
+    });
+
+    // 3秒后移除
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-20px)';
+        setTimeout(() => {
+            toast.remove();
+            // 若容器内无子元素则移除容器
+            if (container.children.length === 0) {
+                container.remove();
+            }
+        }, 300); // 等动画结束
+    }, duration);
+}
 
 
 /*训练时使用*/
@@ -363,7 +420,11 @@ let labelClass = [];//label集合，放置当前训练模型的lable，比对数
 /*训练模型*/
 async function trainModel() {
     if(isTraining) return
-    if(SUM_CLASS<2) return
+    if(SUM_CLASS<2){
+        showToast(languageDate[localStorage.getItem('tw:language') || 'en']['classNum2'])
+        return
+    }
+    
     isTraining=true
     closeAllCamera()
     await tf.setBackend('cpu')
@@ -428,7 +489,7 @@ function className(){
         card.classList.add('class_show_card');
         card.id = 'class_show_card_'+i;
         card.innerHTML = `
-            <div class="class_show_name" >${name}</div>
+            <div class="class_show_name" title="${name}">${name}</div>
             <div class='class_show_progressTrain'><div class='class_show_barTrain'></div></div>
             <div class="class_show_num" >0%</div>
         `;
