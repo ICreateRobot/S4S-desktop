@@ -682,7 +682,7 @@ function setupMicrobitNormalParser() {//无解析器(可能触发未知问题，
     serialDeviceState.parser = serialDeviceState.serialPort;
 
     serialDeviceState.parser.on('data', buffer => {
-        //console.log('Microbit NORMAL BUFFER:', buffer);
+        console.log('Microbit NORMAL BUFFER:', buffer);
         const text = buffer.toString('utf8');
         console.log('Microbit NORMAL TEXT:', text);
         mainWindow.webContents.send('serial-return', text);
@@ -692,7 +692,7 @@ function setupMicrobitNormalParser() {//无解析器(可能触发未知问题，
 
 //######################################## 模式切换 ########################################
 // 进入repl(microbit用)
-async function replSerial(type) {
+async function replSerial(type,mode = "none") {//增加了模式（晕，暂时是为了给wifi写入信息用的，以后有空研究）
     try {
         if (!serialDeviceState.serialPort ) {//|| serialDeviceState.replActive
           return { success: false, error: "串口未连接或已处于REPL模式"};
@@ -703,6 +703,9 @@ async function replSerial(type) {
         if(type === "Microbit"){
             await sendSerialCommand('\x03'); 
         }
+        if(type === "ESP32" && mode ==="wificonfig"){
+            await sendSerialCommand('\x03'); 
+        }
         
         await sendSerialCommand('from s4s import *\r',200);
         if(type === "Microbit"){
@@ -710,8 +713,8 @@ async function replSerial(type) {
             await sendSerialCommand('display.show(Image.HEART)\n\r', 200);
         }
         
-        
         serialDeviceState.replActive = true;
+        console.log("1repl")
         switchSerialParser(type,"repl")
         return { success: true , message: 'REPL模式已激活'};
     } catch (err) {
@@ -1884,7 +1887,6 @@ async function writeEspWiFi(ssid, password, port) {
             if (currentPort) {
                 await safeDisconnect(true); 
             }
-
             // 建立ESP32连接
             await connectSerialDevice( { comPort: port, vendorId: DEVICE_CONFIGS.ESP32.vendorId, productId: DEVICE_CONFIGS.ESP32.productIds[0] }, "ESP32" );
         }
@@ -1892,7 +1894,7 @@ async function writeEspWiFi(ssid, password, port) {
         await new Promise(resolve => setTimeout(resolve, 500));
 
         // 进入REPL
-        await replSerial("ESP32");
+        await replSerial("ESP32","wificonfig");
 
         await new Promise(resolve => setTimeout(resolve, 200));
 
@@ -1905,9 +1907,10 @@ async function writeEspWiFi(ssid, password, port) {
         // 保存Flash
         await new Promise(resolve =>  setTimeout(resolve, 1000));
 
+        console.log("reset ESP32")
         // 重启ESP32
         await sendCommandSerial_D(
-            'reset()',
+            'reset()'+ '\r',
             "ESP32"
         );
 
