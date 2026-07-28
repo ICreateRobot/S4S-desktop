@@ -269,7 +269,11 @@ async function scanAllDevices() {
 async function connectSerialDevice(deviceInfo,deviceType) {
     try {
         // 先安全断开已有串口
-        await safeDisconnect();
+        if(deviceType === "ESP32"){//先这样吧，要不然串口工具干涉断开
+            await safeDisconnect(true);
+        }else{
+            await safeDisconnect();
+        }
     
         if (!deviceInfo.comPort) throw new Error("串口路径无效");
     
@@ -353,7 +357,7 @@ async function changeBaudRate(baudRate) {
 
 
 //######################################## 断开 ########################################
-async function disconnectSerialDevice() {
+async function disconnectSerialDevice(silent = false) {
     let response;
     try {
         // 检查是否有活动连接
@@ -363,7 +367,7 @@ async function disconnectSerialDevice() {
         // 保存当前状态用于通知
         const wasReplActive = serialDeviceState.replActive;
         // 执行断开操作
-        await safeDisconnect();
+        await safeDisconnect(silent);
 
         //notifyRenderer('usb-device-disconnected', { wasReplActive });
         response = {

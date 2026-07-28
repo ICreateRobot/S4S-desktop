@@ -810,6 +810,10 @@ class EditorWindow extends ProjectRunningWindow {
     this.ipc.handle('serial-disconnect', async () => {
       return serialManager.disconnectSerialDevice()
     });
+    // 断开串口连接--静默
+    this.ipc.handle('serial-disconnect-silent', async () => {
+      return serialManager.disconnectSerialDevice(true)
+    });
 
     //进入烧录模式
     this.ipc.handle('serial-exit-repl', async () => {

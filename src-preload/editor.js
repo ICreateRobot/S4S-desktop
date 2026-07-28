@@ -38,6 +38,8 @@ contextBridge.exposeInMainWorld('EditorPreload', {
   serialScan: (deviceType) => ipcRenderer.invoke('serial-scan',deviceType),
   serialConnect: (deviceInfo,deviceType) => ipcRenderer.invoke('serial-connect', deviceInfo,deviceType),
   serialDisconnect: () => ipcRenderer.invoke('serial-disconnect'),
+  serialDisconnect_silent: () => ipcRenderer.invoke('serial-disconnect-silent'),
+  
 
   onSerialDisconnected: (callback) => ipcRenderer.on('serial-disconnected', (event) => callback()),//串口断开监听
 
