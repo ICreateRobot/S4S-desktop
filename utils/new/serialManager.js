@@ -238,7 +238,6 @@ async function scanWithUsbMatching() {
 // 扫描全部设备（不区分类型）
 async function scanAllDevices() {
     try {
-        console.log(111)
         const ports = await SerialPort.list();
         
         // 统一格式转换
@@ -686,7 +685,7 @@ function setupMicrobitNormalParser() {//无解析器(可能触发未知问题，
     serialDeviceState.parser = serialDeviceState.serialPort;
 
     serialDeviceState.parser.on('data', buffer => {
-        console.log('Microbit NORMAL BUFFER:', buffer);
+        //console.log('Microbit NORMAL BUFFER:', buffer);
         const text = buffer.toString('utf8');
         console.log('Microbit NORMAL TEXT:', text);
         mainWindow.webContents.send('serial-return', text);
@@ -701,7 +700,6 @@ async function replSerial(type,mode = "none") {//增加了模式（晕，暂时�
         if (!serialDeviceState.serialPort ) {//|| serialDeviceState.replActive
           return { success: false, error: "串口未连接或已处于REPL模式"};
         }
-        //console.log('replllll');
 
         // 中断当前程序
         if(type === "Microbit"){
@@ -718,7 +716,6 @@ async function replSerial(type,mode = "none") {//增加了模式（晕，暂时�
         }
         
         serialDeviceState.replActive = true;
-        console.log("1repl")
         switchSerialParser(type,"repl")
         return { success: true , message: 'REPL模式已激活'};
     } catch (err) {
@@ -1367,162 +1364,9 @@ function parseCliLine(text, stage) {
             result.progress = parseInt( percentMatch[1], 10);
         }
     }
-    //console.log("00000",result);
     return result;
 }
 
-
-// 正常版本的arduino才用下面这个
-// 运行cli
-// function runCli(args, cliPath) {
-//     return new Promise((resolve, reject) => {
-//         const cli = spawn(cliPath, args, {
-//             windowsHide: true,
-//             cwd: path.dirname(cliPath)
-//         });
-
-//         cli.stdout.on('data', data => {
-//             const text = data.toString();
-//             const result = parseCliLine(text);//处理数据
-//             //console.log(result)
-//             mainWindow.webContents.send('flash-progress', result);
-//         });
-
-//         cli.stderr.on('data', data => {
-//             console.log(111)
-//             console.error(data.toString());
-//         });
-
-//         // cli.on('spawn', () => {
-//         //     console.log("CLI START");
-//         // });
-
-//         cli.on('close', code => {
-//             // console.log("exit:", code);
-//             if (code === 0) {
-//                 resolve();
-//                 if(stage_arduino == "upload"){
-//                     mainWindow.webContents.send("flash-done");
-//                 }
-//             } else {
-//                 reject(new Error(`CLI Error, exitCode= ${code}`));
-//             }
-//         });
-//     });
-// }
-// // 进度处理
-// function parseCliLine(text) {
-//     const result = {
-//         device: 'Arduino',
-//         stage: 'compile',//阶段
-//         progress: null,//进度
-//         message: "",//消息
-//     };
-
-//     // 编译完成
-//     if ( text.includes('Sketch uses') || text.includes('Global variables use') ) {
-//         result.stage = 'compile';
-//         result.message = text;
-//     }else if ( text.includes('Write ') || text.includes('Erase flash') ) {// 刚刚进入烧录阶段
-//         result.stage = 'flashing';
-//         result.progress = 0;
-//         //result.message = text;
-//     }else if ( text.includes('Done in') || text.includes('New upload port') ) { // 成功
-//         result.stage = 'flashing';
-//         result.progress = 100;
-//         //result.message = text;
-//     }else{// 提取进度
-//         const percentMatch = text.match(/(\d+)%/);
-//         if (percentMatch) {
-//             result.stage = 'flashing';
-//             result.progress = parseInt(percentMatch[1]);
-//         }
-//     }
-
-//     return result;
-// }
-
-//暂时不用的方案，舍不得删（创建临时文件且安装包）
-// async function downloadCodeSerial_Arduino1(code) {
-//     try {
-//         const sketchDir = path.join(os.tmpdir(), "mysketch");
-//         if (!fs.existsSync(sketchDir)) fs.mkdirSync(sketchDir);
-
-//         const sketchFile = path.join(sketchDir, "mysketch.ino");
-//         fs.writeFileSync(sketchFile, code);
-
-//         // 安装 R4 支持包（可放在初始化位置）
-//         //await runCli(["core", "install", "arduino:renesas_uno"]);
-//         const libsPath = getResourcePath('/Arduino1/libraries');//自定义库路径
-
-//         //编译 
-//         await runCli([
-//             'compile',
-//             '--fqbn', 'arduino:renesas_uno:unor4wifi',
-//             '--libraries', libsPath,
-//             sketchDir
-//         ]);
-
-
-//         // 上传 
-//         await runCli([
-//             'upload',
-//             '-p', "COM20",//serialDeviceState.serialPort.path,
-//             '--fqbn', 'arduino:renesas_uno:unor4wifi',
-//             sketchDir
-//         ]);
-
-//         return { success: true };
-
-//     } catch (err) {
-//         let errorResult;
-//         if ( typeof err === 'object'  && !(err instanceof Error)){
-//             errorResult = {
-//                 success: false,
-//                 id: err.id || "",
-//                 error: err.error || "unknown error",
-//                 type: err.type || "modal"
-//             };
-//         } else {
-//             errorResult = {
-//                 success: false,
-//                 id: "",
-//                 error: err.message || err.error,
-//                 type: ""
-//             };
-//         }
-//         mainWindow.webContents.send("flash-error", errorResult);
-
-//         console.log("9999", err.message);
-//         return { success: false, error: err.message };
-//     } finally{
-//         isFlashing_arduino = false;
-//     }
-// }
-
-// // 调用cli
-// function runCli(args) {
-//     const config = getResourcePath('/Arduino1/arduino-cli.yaml');
-//     const cliPath = getResourcePath('/Arduino1/arduino-cli.exe');
-//     return new Promise((resolve, reject) => {
-//         console.log("RUN:", cliPath, args.join(" ")); // ⭐ 打印执行命令
-//         const proc = spawn(cliPath, ["--config-file", config, ...args], { shell: true });
-
-//         proc.stdout.on('data', d => {//编译
-//             console.log("[CLI stdout]:", d.toString());  // ⭐ 打印 stdout
-//         });
-//         proc.stderr.on('data', d => {
-//             console.error("[CLI stderr]:", d.toString()); // ⭐ 打印 stderr
-//         });
-
-//         proc.on('close', code => {
-//             console.log("CLI exit code:", code);          // ⭐ 打印退出码
-
-//             if (code === 0) resolve();
-//             else reject(new Error("CLI Error, exitCode=" + code));
-//         });
-//     });
-// }
 
 //######################################## 统一固件烧录接口 ########################################
 // 分发
@@ -1911,7 +1755,6 @@ async function writeEspWiFi(ssid, password, port) {
         // 保存Flash
         await new Promise(resolve =>  setTimeout(resolve, 1000));
 
-        console.log("reset ESP32")
         // 重启ESP32
         await sendCommandSerial_D(
             'reset()'+ '\r',
