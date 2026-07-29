@@ -42,13 +42,13 @@ function createCameraSelectionModal() {
         z-index: 9999; border-radius: 8px; display: flex; flex-direction: column;
         min-width: 280px;
     `;
-
+// <label><input type="radio" name="cameraType" value="robot"><span id='robot'>ICrobot摄像头</span></label>
     modal.innerHTML = `
         <h3 id='selectTitle' style="margin-bottom: 10px;">选择摄像头类型</h3>
         <div style="margin-bottom: 10px;">
             <label><input type="radio" name="cameraType" value="local" checked> <span id='local'>本地摄像头</span></label><br>
             <label><input type="radio" name="cameraType" value="network"><span id='network'>网络摄像头</span> </label>
-            <label><input type="radio" name="cameraType" value="robot"><span id='robot'>ICrobot摄像头</span></label>
+            
         </div>
         <div id="networkCameraInput" style="margin-bottom: 10px; display: none;">
             <input type="text" id="cameraIp" placeholder="请输入网络摄像头IP地址" style="width: 100%; padding: 5px;">
@@ -65,7 +65,7 @@ function createCameraSelectionModal() {
         document.getElementById('selectTitle').textContent = languageDate['zh-cn']['selectTitle'];
         document.getElementById('local').textContent = languageDate['zh-cn']['local'];
         document.getElementById('network').textContent = languageDate['zh-cn']['network'];
-        document.getElementById('robot').textContent = languageDate['zh-cn']['robot'];
+        // document.getElementById('robot').textContent = languageDate['zh-cn']['robot'];
         document.getElementById('cameraIp').placeholder = languageDate['zh-cn']['cameraIp'];
         document.getElementById('cameraSelectConfirm').textContent = languageDate['zh-cn']['cameraSelectConfirm'];
         document.getElementById('cameraSelectCancel').textContent = languageDate['zh-cn']['cameraSelectCancel'];
@@ -73,7 +73,7 @@ function createCameraSelectionModal() {
         document.getElementById('selectTitle').textContent = languageDate['en']['selectTitle'];
         document.getElementById('local').textContent = languageDate['en']['local'];
         document.getElementById('network').textContent = languageDate['en']['network'];
-        document.getElementById('robot').textContent = languageDate['en']['robot'];
+        // document.getElementById('robot').textContent = languageDate['en']['robot'];
         document.getElementById('cameraIp').placeholder = languageDate['en']['cameraIp'];
         document.getElementById('cameraSelectConfirm').textContent = languageDate['en']['cameraSelectConfirm'];
         document.getElementById('cameraSelectCancel').textContent = languageDate['en']['cameraSelectCancel'];
@@ -168,9 +168,9 @@ function handleReciveIp(event){
 }
 
 
-document.getElementById('select-camera').addEventListener('click',()=>{
-    createCameraSelectionModal()
-})
+// document.getElementById('select-camera').addEventListener('click',()=>{
+//     createCameraSelectionModal()
+// })
 // const videoProvider = new VideoProvider();
 
 const getUserMedia = window.getUserMedia;
@@ -287,9 +287,9 @@ function changeLanguage(){
         document.getElementById('progressText').textContent = languageDate['zh-cn']['progressText'];
         document.getElementById('epo').previousElementSibling.textContent = languageDate['zh-cn']['epo'];
         document.getElementById('batch').previousElementSibling.textContent = languageDate['zh-cn']['batch'];
-        document.getElementById('speed').previousElementSibling.textContent = languageDate['zh-cn']['speed'];
+        // document.getElementById('speed').previousElementSibling.textContent = languageDate['zh-cn']['speed'];
         document.getElementById('saveProject').textContent = languageDate['zh-cn']['saveProject'];
-        document.getElementById('select-camera').textContent = languageDate['zh-cn']['select-camera'];
+        // document.getElementById('select-camera').textContent = languageDate['zh-cn']['select-camera'];
         document.querySelector('.preview_title').textContent = languageDate['zh-cn']['preview_title'];
         document.getElementById('exportModel').textContent = languageDate['zh-cn']['exportModel'];
         document.getElementById('playModel').textContent = languageDate['zh-cn']['playModel'];
@@ -306,7 +306,7 @@ function changeLanguage(){
         // Update advanced options
         document.querySelector('.advanced-toggle').textContent = languageDate['zh-cn']['highLevel'];
         document.querySelector('.reset-button').textContent = languageDate['zh-cn']['reset'];
-        document.querySelector('.learn-more-button').textContent =languageDate['zh-cn']['deepLearn'];
+        // document.querySelector('.learn-more-button').textContent =languageDate['zh-cn']['deepLearn'];
         
         // Update training button
         document.getElementById('trainingModel').textContent = languageDate['zh-cn']['startTrain'];
@@ -322,9 +322,9 @@ function changeLanguage(){
         document.getElementById('progressText').textContent = languageDate['en']['progressText'];
         document.getElementById('epo').previousElementSibling.textContent = languageDate['en']['epo'];
         document.getElementById('batch').previousElementSibling.textContent = languageDate['en']['batch'];
-        document.getElementById('speed').previousElementSibling.textContent = languageDate['en']['speed'];
+        // document.getElementById('speed').previousElementSibling.textContent = languageDate['en']['speed'];
         document.getElementById('saveProject').textContent = languageDate['en']['saveProject'];
-        document.getElementById('select-camera').textContent = languageDate['en']['select-camera'];
+        // document.getElementById('select-camera').textContent = languageDate['en']['select-camera'];
         document.querySelector('.preview_title').textContent = languageDate['en']['preview_title'];
         document.getElementById('exportModel').textContent = languageDate['en']['exportModel'];
         document.getElementById('playModel').textContent = languageDate['en']['playModel'];
@@ -341,7 +341,7 @@ function changeLanguage(){
         // Update advanced options
         document.querySelector('.advanced-toggle').textContent = languageDate['en']['highLevel'];
         document.querySelector('.reset-button').textContent = languageDate['en']['reset'];
-        document.querySelector('.learn-more-button').textContent =languageDate['en']['deepLearn'];
+        // document.querySelector('.learn-more-button').textContent =languageDate['en']['deepLearn'];
         
         // Update training button
         document.getElementById('trainingModel').textContent = languageDate['en']['startTrain'];
@@ -1278,6 +1278,13 @@ function updatePitch() {
     rafID = window.requestAnimationFrame(updatePitch);
 }
 
+document.querySelector('.reset-button').addEventListener('click',()=>{
+    console.log('重置参数')
+    epo=50
+    batch=32
+    document.getElementById('epo').value=50
+    document.getElementById('batch').value=32
+})
 
 
 

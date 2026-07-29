@@ -35,13 +35,13 @@ body {
     background-color: #1E90FF;
     text-align: center;
     padding: 15px 0;
-    height: 31px;
+    height: 20px;
 }
 
 /*返回*/
 .topBar_back{
     position: absolute;
-    top:13px;
+    top:8px;
     width:40px;
     height:40px;
     margin-left: 15px;
@@ -732,7 +732,9 @@ button.upFile:disabled {
 .button-container {
   display: flex;
   gap: 20px; /* 固定按钮间距 */
-  justify-content: center; /* 居中显示 */
+  justify-content: flex-end; /* 居中显示 */
+  width:90%;
+
 }
 
 .save-project,
