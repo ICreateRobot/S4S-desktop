@@ -190,7 +190,7 @@ static const enum_map_t enum_map = {
  *******************/
 void dev_protocol_aiCamera_init(void)
 {
-    function_map_collection["vision"] = &function_map;
+    function_map_collection_main["vision"] = &function_map;
 }
 
 

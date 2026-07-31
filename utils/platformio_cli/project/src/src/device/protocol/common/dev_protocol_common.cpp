@@ -2,7 +2,7 @@
  * @Author       : 蔡雅超 (ZIShen)
  * @LastEditors  : zishen
  * @Date         : 2025-11-27 11:01:58
- * @LastEditTime : 2026-04-25 16:55:50
+ * @LastEditTime : 2026-07-23 17:19:27
  * @Description  : 协议的公共接口
  * Copyright (c) 2025 Author 蔡雅超 email: 2672632650@qq.com, All Rights Reserved.
  */
@@ -27,7 +27,8 @@
 /********************
  * global variables
  *******************/
-function_map_collection_t function_map_collection;
+function_map_collection_t function_map_collection_main;
+function_map_collection_t function_map_collection_sys;
 
 
 /********************

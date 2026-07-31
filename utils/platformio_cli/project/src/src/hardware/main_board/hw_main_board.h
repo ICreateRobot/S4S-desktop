@@ -2,7 +2,7 @@
  * @Author       : 蔡雅超 (zishen)
  * @LastEditors  : zishen
  * @Date         : 2026-01-15 15:44:19
- * @LastEditTime : 2026-05-20 17:11:36
+ * @LastEditTime : 2026-07-23 18:04:58
  * @Description  : 主板、超声波、四路巡线
  * Copyright (c) 2026 Author 蔡雅超 email: 2672632650@qq.com, All Rights Reserved.
  */
@@ -98,6 +98,10 @@ public:
 
 public:
     void begin(void);
+
+    // 跳出电机等待状态，并停止所有电机运动
+    void motor_wait_break(void);
+    void restore_default(void);
 
     /****************************************
      *            双电机控制
@@ -219,6 +223,10 @@ protected:
     int writeReg(uint8_t dev_addr, uint8_t reg, uint8_t *data, uint16_t len) override;
     int readReg(uint8_t dev_addr, uint8_t reg, uint8_t *data, uint16_t len) override;
     int isOnline(uint8_t dev_addr) override;
+
+private:
+    // 0 退出等待  1 进入等待 2 跳出等待
+    volatile uint8_t motor_wait_break_flag = 0;
 };
 
 extern hw_main_board_c hw_main_board;

@@ -54,7 +54,7 @@ static const enum_map_t enum_map = {
  *******************/
 void dev_protocol_ultr_init(void)
 {
-    function_map_collection["cultr"] = &function_map;
+    function_map_collection_main["cultr"] = &function_map;
 }
 
 

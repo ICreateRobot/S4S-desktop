@@ -13,6 +13,5 @@
 
 
 void dev_protocol_init(void);
-void dev_protocol_function_map_execute(function_map_collection_t &function_map_collection, udc_pack_t * pack);
 
 #endif /* __DEV_PROTOCOL_H__ */

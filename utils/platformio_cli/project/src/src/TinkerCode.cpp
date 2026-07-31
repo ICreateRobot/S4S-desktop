@@ -2,7 +2,7 @@
  * @Author       : 蔡雅超 (zishen)
  * @LastEditors  : zishen
  * @Date         : 2026-04-27 19:49:10
- * @LastEditTime : 2026-06-11 13:38:02
+ * @LastEditTime : 2026-07-23 16:06:12
  * @Description  : 在进入用户程序前进行的初始化操作
  * Copyright (c) 2026 Author 蔡雅超 email: 2672632650@qq.com, All Rights Reserved.
  */
@@ -173,7 +173,11 @@ static void app_task_main(void *param)
  */
 static void app_task_sys(void *param)
 {
-    while (1) { vTaskDelay(1); }
+    while (1) 
+    { 
+        udc_pack_task(&udcPackGroup_sys);
+        vTaskDelay(1); 
+    }
 }
 
 /**
@@ -188,8 +192,7 @@ static void app_task_udcheck(void *param)
         {
             uint8_t rev_data = if_uart_comm.read();
             udc_pack_receive_data(&udcPackGroup_main, &rev_data, 1);
-            // udc_pack_receive_data(&udcPackGroup_sys, &rev_data, 1);
-            // if_uart_comm.send_bytes(&rev_data, 1);
+            udc_pack_receive_data(&udcPackGroup_sys, &rev_data, 1);
         }
         vTaskDelay(1);
     }

@@ -69,7 +69,7 @@ static const enum_map_t enum_map = {
  *******************/
 void dev_protocol_gray_init(void)
 {
-    function_map_collection["gray"] = &function_map;
+    function_map_collection_main["gray"] = &function_map;
 }
 
 /****************************

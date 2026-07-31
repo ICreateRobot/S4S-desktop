@@ -52,7 +52,7 @@ static const function_map_t function_map = {
  *******************/
 void dev_protocol_espAudio_init(void)
 {
-    function_map_collection["esp_audio"] = &function_map;
+    function_map_collection_main["esp_audio"] = &function_map;
 }
 
 

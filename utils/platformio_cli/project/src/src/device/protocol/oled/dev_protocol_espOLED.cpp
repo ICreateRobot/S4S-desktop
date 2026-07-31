@@ -56,7 +56,7 @@ static const function_map_t function_map = {
  *******************/
 void dev_protocol_espOLED_init(void)
 {
-    function_map_collection["esp_oled"] = &function_map;
+    function_map_collection_main["esp_oled"] = &function_map;
 }
 
 /****************************

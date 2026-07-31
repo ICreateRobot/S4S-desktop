@@ -2,7 +2,7 @@
  * @Author       : 蔡雅超 (ZIShen)
  * @LastEditors  : zishen
  * @Date         : 2025-11-26 14:08:14
- * @LastEditTime : 2026-07-15 11:41:27
+ * @LastEditTime : 2026-07-24 15:13:38
  * @Description  : main.h 文件
  * Copyright (c) 2025 Author 蔡雅超 email: 2672632650@qq.com, All Rights Reserved.
  */
@@ -32,7 +32,7 @@ typedef struct {
 // 版本
 #define VERSION_0 0
 #define VERSION_1 1
-#define VERSION_2 5
+#define VERSION_2 6
 
 extern ptask_root_1_collection_t ptask_root_1_collection;
 extern ptask_1_collection_t      ptask_1_collection;

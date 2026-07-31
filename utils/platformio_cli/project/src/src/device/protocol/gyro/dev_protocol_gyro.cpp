@@ -56,7 +56,7 @@ static const function_map_t function_map = {
  *******************/
 void dev_protocol_gyro_init(void)
 {
-    function_map_collection["gyro"] = &function_map;
+    function_map_collection_main["gyro"] = &function_map;
 }
 
 /****************************

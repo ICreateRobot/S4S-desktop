@@ -2,7 +2,7 @@
  * @Author       : 蔡雅超 (ZIShen)
  * @LastEditors  : zishen
  * @Date         : 2025-11-26 16:47:12
- * @LastEditTime : 2026-05-08 14:37:44
+ * @LastEditTime : 2026-07-24 08:45:57
  * @Description  : 协议的公共头文件
  * Copyright (c) 2025 Author 蔡雅超 email: 2672632650@qq.com, All Rights Reserved.
  */
@@ -87,7 +87,7 @@ struct fmap_result_t {
         }                                                                                          \
     } while (0)
 
-#define function_map_udcpack_get_param_double(pack, id, pDoubleVal)                                \
+#define function_map_udcpack_get_param_float(pack, id, pFloatVal)                                  \
     do                                                                                             \
     {                                                                                              \
         int ret = 0;                                                                               \
@@ -166,6 +166,7 @@ int function_map_udcpack_get_param_string_default(const udc_pack_t *pack, uint8_
                                                   std::string *pStringVal);
 int enum_map_get_value_default(const enum_map_t &enum_map, const char *key, int &value);
 
-extern function_map_collection_t function_map_collection;
+extern function_map_collection_t function_map_collection_main;
+extern function_map_collection_t function_map_collection_sys;
 
 #endif /* __DEV_PROTOCOL_COMMON_H__ */

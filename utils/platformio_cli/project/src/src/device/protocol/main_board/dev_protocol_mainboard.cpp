@@ -2,7 +2,7 @@
  * @Author       : 蔡雅超 (ZIShen)
  * @LastEditors  : zishen
  * @Date         : 2025-11-28 15:45:07
- * @LastEditTime : 2026-07-03 09:07:25
+ * @LastEditTime : 2026-07-24 08:42:39
  * @Description  : mainboard 协议处理模块
  * Copyright (c) 2025 Author 蔡雅超 email: 2672632650@qq.com, All Rights Reserved.
  */
@@ -19,6 +19,8 @@
 /****************************
  * function declaration
  ***************************/
+static fmap_result_t fMap_restore_default(udc_pack_t *pack);
+
 static fmap_result_t fMap_movement_set_motors(udc_pack_t *pack);
 static fmap_result_t fMap_movement_start(udc_pack_t *pack);
 static fmap_result_t fMap_movement_move(udc_pack_t *pack);
@@ -60,6 +62,12 @@ static fmap_result_t fMap_device_version(udc_pack_t *pack);
 /********************
  * static variables
  *******************/
+static const function_map_t sys_function_map = {
+    // clang-format off
+    {"restore_default",         fMap_restore_default},
+    // clang-format on
+};
+
 static const function_map_t function_map = {
     // clang-format off
     {"movement_set_motors",     fMap_movement_set_motors},
@@ -186,12 +194,27 @@ static const enum_map_t enum_map = {
  *******************/
 void dev_protocol_mainBoard_init(void)
 {
-    function_map_collection["bot"] = &function_map;
+    function_map_collection_main["bot"] = &function_map;
+    function_map_collection_sys["bot"] = &sys_function_map;
 }
 
 /****************************
  * static function
  ***************************/
+
+/****************
+ *     sys
+ ***************/
+static fmap_result_t fMap_restore_default(udc_pack_t *pack)
+{
+    hw_main_board.restore_default();
+    return fmap_result_t::make_ok();
+}
+
+
+/****************
+ *     main
+ ***************/
 static fmap_result_t fMap_movement_set_motors(udc_pack_t *pack)
 {
     int left, right;

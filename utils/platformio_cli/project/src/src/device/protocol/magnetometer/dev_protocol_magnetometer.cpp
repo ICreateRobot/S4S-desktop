@@ -52,7 +52,7 @@ static const function_map_t function_map = {
  *******************/
 void dev_protocol_magnetometer_init(void)
 {
-    function_map_collection["magnetometer"] = &function_map;
+    function_map_collection_main["magnetometer"] = &function_map;
 }
 
 /****************************

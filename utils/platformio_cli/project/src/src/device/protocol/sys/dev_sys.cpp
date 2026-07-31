@@ -45,7 +45,7 @@ static const function_map_t function_map = {
  *******************/
 void dev_sys_init(void)
 {
-    function_map_collection["sys"] = &function_map;
+    function_map_collection_main["sys"] = &function_map;
 }
 
 /****************************

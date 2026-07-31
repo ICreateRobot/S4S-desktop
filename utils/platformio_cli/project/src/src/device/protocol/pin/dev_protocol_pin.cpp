@@ -54,7 +54,7 @@ static const function_map_t function_map = {
  *******************/
 void dev_protocol_pin_init(void)
 {
-    function_map_collection["esp_pin"] = &function_map;
+    function_map_collection_main["esp_pin"] = &function_map;
 }
 
 

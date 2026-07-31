@@ -2,7 +2,7 @@
  * @Author       : 蔡雅超 (zishen)
  * @LastEditors  : zishen
  * @Date         : 2026-01-15 15:44:10
- * @LastEditTime : 2026-05-21 09:32:45
+ * @LastEditTime : 2026-07-24 15:15:07
  * @Description  : 主板、超声波、四路巡线
  * Copyright (c) 2026 Author 蔡雅超 email: 2672632650@qq.com, All Rights Reserved.
  */
@@ -51,28 +51,35 @@ void hw_main_board_c::begin(void)
 {}
 
 int hw_main_board_c::writeData(uint8_t dev_addr, uint8_t *data, uint16_t len)
-{
-    return if_i2c_internal_handle.write_bytes(dev_addr, data, len);
-}
+{ return if_i2c_internal_handle.write_bytes(dev_addr, data, len); }
 
 int hw_main_board_c::readData(uint8_t dev_addr, uint8_t *data, uint16_t len)
-{
-    return if_i2c_internal_handle.read_bytes(dev_addr, data, len);
-}
+{ return if_i2c_internal_handle.read_bytes(dev_addr, data, len); }
 
 int hw_main_board_c::writeReg(uint8_t dev_addr, uint8_t reg, uint8_t *data, uint16_t len)
-{
-    return if_i2c_internal_handle.write_reg(dev_addr, reg, data, len);
-}
+{ return if_i2c_internal_handle.write_reg(dev_addr, reg, data, len); }
 
 int hw_main_board_c::readReg(uint8_t dev_addr, uint8_t reg, uint8_t *data, uint16_t len)
-{
-    return if_i2c_internal_handle.read_reg(dev_addr, reg, data, len);
-}
+{ return if_i2c_internal_handle.read_reg(dev_addr, reg, data, len); }
 
 int hw_main_board_c::isOnline(uint8_t dev_addr)
+{ return 0; }
+
+
+void hw_main_board_c::motor_wait_break(void)
 {
-    return 0;
+    if (1 == motor_wait_break_flag) motor_wait_break_flag = 2;
+    delay(100);
+    motors_stop(0);
+    motors_stop(1);
+    motors_stop(2);
+    motors_stop(3);
+}
+
+void hw_main_board_c::restore_default(void)
+{
+    motor_wait_break();
+    light_set_color(0, 0, 0);
 }
 
 /****************************************
@@ -82,20 +89,20 @@ int hw_main_board_c::isOnline(uint8_t dev_addr)
 int hw_main_board_c::movement_wait_finsh(int timeout)
 {
     delay(100);
-    uint32_t last_tick = zst_tick_get();
-    uint8_t running = 1;
-    int ret = 0;
+    uint32_t last_tick    = zst_tick_get();
+    uint8_t  running      = 1;
+    int      ret          = 0;
+    motor_wait_break_flag = 1;
     while (1)
     {
         delay(20);
         ret = s4s_mainBoard::encoder_motor_pair_get_action_runing(&running);
-        if (ret < 0)
-            return ret;
-        if (0 == running)
-            break;
-        if (timeout >= 0 && zst_tick_elaps(last_tick) > timeout)
-            break;
+        if (ret < 0) break;
+        if (0 == running) break;
+        if (timeout >= 0 && zst_tick_elaps(last_tick) > timeout) break;
+        if (2 == motor_wait_break_flag) { break; }
     }
+    motor_wait_break_flag = 0;
     return ret;
 }
 
@@ -188,12 +195,16 @@ int hw_main_board_c::movement_drive_for(int lspeed, int rspeed, int data, int un
     DATA_CHECK(data, 0, 1000);
     DATA_CHECK(unit, 0, 2);
 
-    int ret_error = 0;
-    uint8_t dir = 0;
-    if (lspeed >= 0 && rspeed >= 0)     dir = 0;
-    else if (lspeed < 0 && rspeed < 0)  dir = 1;
-    else if (lspeed < 0 && rspeed >= 0) dir = 2;
-    else if (lspeed >= 0 && rspeed < 0) dir = 3;
+    int     ret_error = 0;
+    uint8_t dir       = 0;
+    if (lspeed >= 0 && rspeed >= 0)
+        dir = 0;
+    else if (lspeed < 0 && rspeed < 0)
+        dir = 1;
+    else if (lspeed < 0 && rspeed >= 0)
+        dir = 2;
+    else if (lspeed >= 0 && rspeed < 0)
+        dir = 3;
 
     ret_error += s4s_mainBoard::encoder_motor_pair_set_dynamic_speed(abs(lspeed), abs(rspeed));
 
@@ -240,22 +251,22 @@ int hw_main_board_c::movement_set_speed(int speed)
 int hw_main_board_c::motors_wait_finsh(int motor, int timeout)
 {
     DATA_CHECK(motor, 0, 3);
-    
+
     delay(100);
-    uint32_t last_tick = zst_tick_get();
-    uint8_t running = 1;
-    int ret = 0;
+    uint32_t last_tick    = zst_tick_get();
+    uint8_t  running      = 1;
+    int      ret          = 0;
+    motor_wait_break_flag = 1;
     while (1)
     {
         delay(20);
         ret = s4s_mainBoard::encoder_motor_get_action_runing(motor, &running);
-        if (ret < 0)
-            return ret;
-        if (0 == running)
-            break;
-        if (timeout >= 0 && zst_tick_elaps(last_tick) > timeout)
-            break;
+        if (ret < 0) break;
+        if (0 == running) break;
+        if (timeout >= 0 && zst_tick_elaps(last_tick) > timeout) break;
+        if (2 == motor_wait_break_flag) { break; }
     }
+    motor_wait_break_flag = 0;
     return ret;
 }
 
@@ -486,17 +497,17 @@ int hw_main_board_c::voice_recognized(int recognized)
     uint8_t state;
     if (0 != s4s_mainBoard::voice_get_state(&state)) return -1;
 
-    if (state == recognized) 
+    if (state == recognized)
     {
         s4s_mainBoard::voice_reset_state();
         return 1;
-    }
-    else return 0;
+    } else
+        return 0;
 }
 
 String hw_main_board_c::voice_version(void)
 {
-    String version_str;
+    String  version_str;
     uint8_t version[3];
     if (0 == s4s_mainBoard::voice_get_version(version))
     {
@@ -548,7 +559,7 @@ int hw_main_board_c::rtc_get(int sel)
         if (0 == ret_error)
         {
             if (sel == RTC_YEAR)
-                ret_error = year+2000;
+                ret_error = year + 2000;
             else if (sel == RTC_MONTH)
                 ret_error = month;
             else if (sel == RTC_DAY)
@@ -558,7 +569,7 @@ int hw_main_board_c::rtc_get(int sel)
         }
     } else
     {
-        uint8_t hour=0, minute=0, second=0;
+        uint8_t hour = 0, minute = 0, second = 0;
         ret_error = s4s_mainBoard::rtc_get_time(&hour, &minute, &second);
         if (0 == ret_error)
         {
@@ -566,7 +577,7 @@ int hw_main_board_c::rtc_get(int sel)
                 ret_error = hour;
             else if (sel == RTC_MINUTE)
                 ret_error = minute;
-            else if (sel == RTC_SECOND) 
+            else if (sel == RTC_SECOND)
                 ret_error = second;
         }
     }

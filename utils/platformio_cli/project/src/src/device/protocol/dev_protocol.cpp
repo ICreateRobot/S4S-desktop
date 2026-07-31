@@ -2,7 +2,7 @@
  * @Author       : 蔡雅超 (ZIShen)
  * @LastEditors  : zishen
  * @Date         : 2025-11-26 14:48:31
- * @LastEditTime : 2026-05-08 14:48:05
+ * @LastEditTime : 2026-07-24 08:39:48
  * @Description  : 串口通讯协议
  * Copyright (c) 2025 Author 蔡雅超 email: 2672632650@qq.com, All Rights Reserved.
  */
@@ -34,14 +34,16 @@ static int  udc_send_bytes_callback(const struct _udc_pack_t *pack, const uint8_
 static int  calculate_verify(const struct _udc_pack_t *pack, const uint8_t *buf, uint16_t len,
                              uint8_t *verify);
 static void udc_event_receive_finsh(udc_event_t *e);
-static void serialize_field(const fmap_field_t &field);
 static void function_map_send_result(const fmap_result_t &result);
 
 /********************
  * static variables
  *******************/
-static uint8_t         udc_protocol_rx_buffer[256] = {0};
-static udc_event_dsc_t udc_event_receive_finsh_dsc = {0};
+static uint8_t         udc_main_protocol_rx_buffer[256] = {0};
+static udc_event_dsc_t udc_main_event_receive_finsh_dsc = {0};
+
+static uint8_t         udc_sys_protocol_rx_buffer[256] = {0};
+static udc_event_dsc_t udc_sys_event_receive_finsh_dsc = {0};
 
 
 /********************
@@ -70,34 +72,78 @@ void dev_protocol_init(void)
     dev_protocol_magnetometer_init();
 
 
-    /****************
-     * 协议初始化
-     ***************/
-    udc_pack_init_t init = {.pack_group = &udcPackGroup_main,
-                            .pack       = &udcPack_main,
-                            .header =
-                                {
-                                    .header     = "\xAA\x01",
-                                    .header_len = 2,
-                                },
-                            .verify = {
-                                .calculate_verify = calculate_verify,
-                                .verify_len       = 1,
-                            }};
-    udc_pack_init(&init);
+    /*******************
+     *  main 协议初始化
+     ******************/
+    udc_pack_init_t udc_main_init = {.pack_group = &udcPackGroup_main,
+                                     .pack       = &udcPack_main,
+                                     .header =
+                                         {
+                                             .header     = "\xAA\x01",
+                                             .header_len = 2,
+                                         },
+                                     .verify = {
+                                         .calculate_verify = calculate_verify,
+                                         .verify_len       = 1,
+                                     }};
+    udc_pack_init(&udc_main_init);
     udc_pack_set_send_bytes_func(&udcPack_main, udc_send_bytes_callback);
-    udc_pack_set_buffer_static(&udcPack_main, UDC_PACK_RECEIVE, udc_protocol_rx_buffer,
-                               sizeof(udc_protocol_rx_buffer));
+    udc_pack_set_buffer_static(&udcPack_main, UDC_PACK_RECEIVE, udc_main_protocol_rx_buffer,
+                               sizeof(udc_main_protocol_rx_buffer));
+    /*******************
+     *  sys 协议初始化
+     ******************/
+    udc_pack_init_t udc_sys_init = {.pack_group = &udcPackGroup_sys,
+                                    .pack       = &udcPack_sys,
+                                    .header =
+                                        {
+                                            .header     = "\xAA\x02",
+                                            .header_len = 2,
+                                        },
+                                    .verify = {
+                                        .calculate_verify = calculate_verify,
+                                        .verify_len       = 1,
+                                    }};
+    udc_pack_init(&udc_sys_init);
+    udc_pack_set_send_bytes_func(&udcPack_sys, udc_send_bytes_callback);
+    udc_pack_set_buffer_static(&udcPack_sys, UDC_PACK_RECEIVE, udc_sys_protocol_rx_buffer,
+                               sizeof(udc_sys_protocol_rx_buffer));
 
 
     /****************
      * 协议事件注册
      ***************/
-    udc_pack_add_event_cb_static(&udcPack_main, &udc_event_receive_finsh_dsc,
-                                 udc_event_receive_finsh, UDC_EVENT_PACK_RECEIVE_FINSHED, NULL);
+    udc_pack_add_event_cb_static(&udcPack_main, &udc_main_event_receive_finsh_dsc,
+                                 udc_event_receive_finsh, UDC_EVENT_PACK_RECEIVE_FINSHED,
+                                 &function_map_collection_main);
+    udc_pack_add_event_cb_static(&udcPack_sys, &udc_sys_event_receive_finsh_dsc,
+                                 udc_event_receive_finsh, UDC_EVENT_PACK_RECEIVE_FINSHED,
+                                 &function_map_collection_sys);
 }
 
-void dev_protocol_function_map_execute(function_map_collection_t &function_map_collection,
+/****************************
+ * static function
+ ***************************/
+
+
+static int udc_send_bytes_callback(const struct _udc_pack_t *pack, const uint8_t *buf, uint16_t len)
+{
+    if_uart_comm.send_bytes((uint8_t *)buf, len);
+    return 0;
+}
+
+static int calculate_verify(const struct _udc_pack_t *pack, const uint8_t *buf, uint16_t len,
+                            uint8_t *verify)
+{
+    *verify = 0x55;
+    return 0;
+}
+
+/***************************************************
+ *                  协议
+ **************************************************/
+
+static void dev_protocol_function_map_execute(function_map_collection_t &function_map_collection,
                                        udc_pack_t                *pack)
 {
     // 调试输出 obj
@@ -105,7 +151,7 @@ void dev_protocol_function_map_execute(function_map_collection_t &function_map_c
     // {
     //     udc_obj_t obj = {0};
     //     // clang-format off
-    //     UDC_PACK_OBJ_FOREACH(UDC_PACK_RECEIVE, pack, &obj, 
+    //     UDC_PACK_OBJ_FOREACH(UDC_PACK_RECEIVE, pack, &obj,
     //         printf("obj id: %d\n", obj.id);
     //         printf("obj size: %d\n", obj.size);
     //         printf("obj data: ");
@@ -138,7 +184,7 @@ void dev_protocol_function_map_execute(function_map_collection_t &function_map_c
         {
             if (0 == strcmp(it.first, function_map.c_str()))
             {
-                is_find_map = 1;
+                is_find_map          = 1;
                 fmap_result_t result = function_map_exec(it.second, function_name, pack);
                 function_map_send_result(result);
                 if (false == result.is_ok())
@@ -148,10 +194,7 @@ void dev_protocol_function_map_execute(function_map_collection_t &function_map_c
                 }
             }
         }
-        if (0 == is_find_map)
-        {
-            ZST_LOGW(LOG_TAG, "no target device: %s", function_map.c_str());
-        }
+        if (0 == is_find_map) { ZST_LOGW(LOG_TAG, "no target device: %s", function_map.c_str()); }
     } else
     {
         ZST_LOGE(LOG_TAG, "type error");
@@ -160,31 +203,15 @@ void dev_protocol_function_map_execute(function_map_collection_t &function_map_c
 }
 
 
-/****************************
- * static function
- ***************************/
 
-
-static int udc_send_bytes_callback(const struct _udc_pack_t *pack, const uint8_t *buf, uint16_t len)
-{
-    if_uart_comm.send_bytes((uint8_t *)buf, len);
-    return 0;
-}
-
-static int calculate_verify(const struct _udc_pack_t *pack, const uint8_t *buf, uint16_t len,
-                            uint8_t *verify)
-{
-    *verify = 0x55;
-    return 0;
-}
-
-/***************************************************
- *                  协议
- **************************************************/
 
 static void udc_event_receive_finsh(udc_event_t *e)
 {
-    dev_protocol_function_map_execute(function_map_collection, &udcPack_main);
+    function_map_collection_t *function_map_collection =
+        (function_map_collection_t *)udc_event_get_user_data(e);
+    udc_pack_t *udc_pack = (udc_pack_t *)udc_event_get_target(e);
+
+    dev_protocol_function_map_execute(*function_map_collection, udc_pack);
 }
 
 
