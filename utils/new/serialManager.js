@@ -1831,6 +1831,7 @@ module.exports = {
     cancelDownloadCodeSerial,
     unifiedFlashFirmware,
     writeEspWiFi,
-    mB_runCodeSerial
+    mB_runCodeSerial,
+    clearCurrentCommand
 };
   

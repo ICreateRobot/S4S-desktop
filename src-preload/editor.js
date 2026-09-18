@@ -57,6 +57,8 @@ contextBridge.exposeInMainWorld('EditorPreload', {
   onFlashError: cb => ipcRenderer.on("flash-error", (_, m) => cb(m)),//下载报错
   cancelFlash: () => ipcRenderer.invoke("flash-cancel"),//中止下载(暂时没有使用)
 
+  clearCurrentCommand: () => ipcRenderer.invoke("serial-clear-currentCommand"),//清理阻塞消息
+
   onSerialReturn: (callback) => ipcRenderer.on('serial-return', (_, text) => callback(text)),// 监听串口返回
   sendSerialCommand: (command,type) => ipcRenderer.invoke('serial-send-command-direct', command,type),//串口数据直发
 

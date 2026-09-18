@@ -835,6 +835,12 @@ class EditorWindow extends ProjectRunningWindow {
       return serialManager.replExitSerial("ESP32");
     });
 
+    //清理阻塞
+    this.ipc.handle('serial-clear-currentCommand', async () => {
+      serialManager.clearCurrentCommand();
+    });
+    
+
     
 
     // 发送数据
