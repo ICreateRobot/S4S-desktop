@@ -32,23 +32,23 @@ console.log('powerSaveBlocker started, ID:', blockerId);
 
 
 // 系统从休眠状态恢复
-powerMonitor.on('resume', () => {
-    // 弹出警告提示
-  dialog.showMessageBox({
-    type: 'warning',
-    buttons: [`${translate('index.confirm')}`],
-    defaultId: 0,
-    title: `${translate('index.sysTitle')}`,
-    message: `${translate('index.sysMessage')}`,
-    detail: `${translate('index.sysDetail')}`,
-  });
+// powerMonitor.on('resume', () => {
+//     // 弹出警告提示
+//   dialog.showMessageBox({
+//     type: 'warning',
+//     buttons: [`${translate('index.confirm')}`],
+//     defaultId: 0,
+//     title: `${translate('index.sysTitle')}`,
+//     message: `${translate('index.sysMessage')}`,
+//     detail: `${translate('index.sysDetail')}`,
+//   });
 
-  // 延时 60 秒后执行重启
-  setTimeout(() => {
-    app.relaunch(); // 重启应用
-    app.exit();     // 退出当前实例
-  }, 60 * 1000); // 60秒 = 60000 毫秒
-});
+//   // 延时 60 秒后执行重启
+//   setTimeout(() => {
+//     app.relaunch(); // 重启应用
+//     app.exit();     // 退出当前实例
+//   }, 60 * 1000); // 60秒 = 60000 毫秒
+// });
 app.enableSandbox();
 
 // Allows certain versions of Scratch Link to work without an internet connection
